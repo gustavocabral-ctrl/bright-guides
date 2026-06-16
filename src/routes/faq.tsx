@@ -1,6 +1,7 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { FaqProvider } from "@/lib/faq-store";
 import { FaqSidebar } from "@/components/faq/FaqSidebar";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { FaqTopbar } from "@/components/faq/FaqTopbar";
 
 export const Route = createFileRoute("/faq")({
@@ -16,15 +17,17 @@ export const Route = createFileRoute("/faq")({
 function FaqLayout() {
   return (
     <FaqProvider>
-      <div className="flex h-screen w-full bg-[var(--surface-muted)] text-foreground">
-        <FaqSidebar />
-        <div className="flex flex-1 flex-col overflow-hidden">
-          <FaqTopbar />
-          <main className="flex-1 overflow-auto">
-            <Outlet />
-          </main>
+      <TooltipProvider delayDuration={200}>
+        <div className="flex h-screen w-full bg-[var(--surface-muted)] text-foreground">
+          <FaqSidebar />
+          <div className="flex flex-1 flex-col overflow-hidden">
+            <FaqTopbar />
+            <main className="flex-1 overflow-auto">
+              <Outlet />
+            </main>
+          </div>
         </div>
-      </div>
+      </TooltipProvider>
     </FaqProvider>
   );
 }

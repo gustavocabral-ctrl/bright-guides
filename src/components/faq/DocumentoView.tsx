@@ -19,7 +19,7 @@ import { EmptyDocumento } from "./EmptyDocumento";
 const nid = () => `b-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 
 export function DocumentoView() {
-  const { selected, updateBlocos } = useFaq();
+  const { selected, updateBlocos, renameGuia } = useFaq();
   const [titleEditing, setTitleEditing] = useState(false);
 
   if (!selected) {
@@ -71,10 +71,11 @@ export function DocumentoView() {
               defaultValue={selected.nome}
               onBlur={(e) => {
                 setTitleEditing(false);
-                // rename via store
-                if (e.target.value.trim()) {
-                  // dispatch a custom update — reuse renameGuia via window? simpler: use context
-                }
+                const v = e.target.value.trim();
+                if (v && v !== selected.nome) renameGuia(selected.id, v);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") (e.target as HTMLInputElement).blur();
               }}
               className="w-full border-b border-primary/40 bg-transparent text-3xl font-semibold tracking-tight outline-none"
             />
