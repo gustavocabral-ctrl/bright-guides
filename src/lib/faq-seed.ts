@@ -8,7 +8,8 @@ export const CATEGORIAS: Categoria[] = [
   { id: "c5", nome: "Cadastro" },
 ];
 
-const today = new Date().toISOString();
+// Fixed seed timestamp to avoid SSR hydration mismatch
+const today = "2026-06-16T20:59:00.000Z";
 
 const leaf = (id: string, nome: string, cats: Categoria[] = []): Guia => ({
   id,
