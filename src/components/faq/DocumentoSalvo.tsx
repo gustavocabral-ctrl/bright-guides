@@ -1,7 +1,7 @@
 import { Info, AlertCircle } from "lucide-react";
 import type { Bloco } from "@/lib/faq-types";
 import { MARKER_BY_KIND, ordinal } from "@/lib/faq-markers";
-import { MarkerShape } from "./blocos/BlocoImagem";
+import { ArrowSVG, RectShape } from "./blocos/BlocoImagem";
 
 export function DocumentoSalvo({ blocos }: { blocos: Bloco[] }) {
   if (blocos.length === 0) {
@@ -40,19 +40,35 @@ export function DocumentoSalvo({ blocos }: { blocos: Bloco[] }) {
                     alt={b.nome || "Imagem"}
                     className="block max-h-[480px] w-auto max-w-full rounded-md"
                   />
-                  {markers.map((m, idx) => (
-                    <div
-                      key={m.id}
-                      className="absolute"
-                      style={{
-                        left: `${m.x * 100}%`,
-                        top: `${m.y * 100}%`,
-                        transform: "translate(-50%, -50%)",
-                      }}
-                    >
-                      <MarkerShape kind={m.kind} number={idx + 1} />
-                    </div>
-                  ))}
+                  {markers.map((m, idx) => {
+                    const meta = MARKER_BY_KIND[m.kind];
+                    return (
+                      <div
+                        key={m.id}
+                        className="absolute"
+                        style={{
+                          left: `${m.x * 100}%`,
+                          top: `${m.y * 100}%`,
+                          width: `${m.w * 100}%`,
+                          height: `${m.h * 100}%`,
+                          transform: `rotate(${m.rotation}deg)`,
+                          transformOrigin: "center center",
+                        }}
+                      >
+                        {meta.shape === "seta" ? (
+                          <ArrowSVG color={meta.color} />
+                        ) : (
+                          <RectShape color={meta.color} />
+                        )}
+                        <div
+                          className="absolute -left-2 -top-2 flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[10px] font-bold text-white shadow ring-2 ring-white"
+                          style={{ backgroundColor: meta.color }}
+                        >
+                          {idx + 1}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="flex h-40 w-full items-center justify-center rounded-md bg-muted text-xs italic text-muted-foreground">
