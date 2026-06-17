@@ -1,5 +1,5 @@
-import { useRef, useState } from "react";
-import { Upload, ImagePlus, Sparkles, Plus, X, GripVertical } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Upload, ImagePlus, Sparkles, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,62 +15,228 @@ import { MARKERS, MARKER_BY_KIND, ordinal } from "@/lib/faq-markers";
 import { cn } from "@/lib/utils";
 
 const mid = () => `m-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
-
 const DRAG_NEW = "application/x-faq-marker-kind";
-const DRAG_MOVE = "application/x-faq-marker-move";
 
-export function MarkerShape({
-  kind,
-  number,
-  onDelete,
-  draggable,
-  onDragStart,
-}: {
-  kind: MarkerKind;
-  number: number;
-  onDelete?: () => void;
-  draggable?: boolean;
-  onDragStart?: (e: React.DragEvent) => void;
-}) {
-  const meta = MARKER_BY_KIND[kind];
-  const base =
-    "flex items-center justify-center text-[11px] font-bold text-white shadow-md ring-2 ring-white";
-  let shapeCls = "";
-  let w = 28, h = 28;
-  if (meta.shape === "seta") {
-    shapeCls = "rounded-full";
-  } else if (meta.shape === "quadrado") {
-    shapeCls = "rounded";
-  } else {
-    shapeCls = "rounded";
-    w = 44;
-    h = 22;
-  }
+/* -------------------- Shape renderers -------------------- */
+
+/** Renders an arrow inside its bounding box, pointing right by default.
+ *  Rotation is applied by the parent wrapper. */
+export function ArrowSVG({ color, className }: { color: string; className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 100 30"
+      preserveAspectRatio="none"
+      className={cn("block h-full w-full", className)}
+    >
+      <defs>
+        <marker
+          id={`ah-${color.replace("#", "")}`}
+          viewBox="0 0 10 10"
+          refX="8"
+          refY="5"
+          markerWidth="5"
+          markerHeight="5"
+          orient="auto-start-reverse"
+        >
+          <path d="M0,0 L10,5 L0,10 z" fill={color} />
+        </marker>
+      </defs>
+      <line
+        x1="4"
+        y1="15"
+        x2="92"
+        y2="15"
+        stroke={color}
+        strokeWidth="6"
+        strokeLinecap="round"
+        markerEnd={`url(#ah-${color.replace("#", "")})`}
+      />
+    </svg>
+  );
+}
+
+export function RectShape({ color, className }: { color: string; className?: string }) {
   return (
     <div
-      className={cn(base, shapeCls, "group relative cursor-move select-none")}
-      draggable={draggable}
-      onDragStart={onDragStart}
-      style={{ width: w, height: h, backgroundColor: meta.color }}
-      title={meta.descricao}
+      className={cn("h-full w-full rounded-[3px] border-[3px]", className)}
+      style={{ borderColor: color, backgroundColor: "transparent" }}
+    />
+  );
+}
+
+/** Small static preview of a shape used inside the palette list. */
+function PalettePreview({ kind }: { kind: MarkerKind }) {
+  const meta = MARKER_BY_KIND[kind];
+  if (meta.shape === "seta") {
+    return (
+      <div className="h-5 w-12 shrink-0">
+        <ArrowSVG color={meta.color} />
+      </div>
+    );
+  }
+  if (meta.shape === "quadrado") {
+    return <div className="h-8 w-8 shrink-0"><RectShape color={meta.color} /></div>;
+  }
+  return <div className="h-5 w-12 shrink-0"><RectShape color={meta.color} /></div>;
+}
+
+/* -------------------- Defaults & helpers -------------------- */
+
+function defaultSize(kind: MarkerKind): { w: number; h: number } {
+  const meta = MARKER_BY_KIND[kind];
+  if (meta.shape === "seta") return { w: 0.18, h: 0.06 };
+  if (meta.shape === "quadrado") return { w: 0.1, h: 0.1 };
+  return { w: 0.22, h: 0.1 };
+}
+
+type DragState =
+  | { mode: "move"; id: string; startX: number; startY: number; origX: number; origY: number }
+  | {
+      mode: "resize";
+      id: string;
+      corner: "nw" | "ne" | "sw" | "se";
+      startX: number;
+      startY: number;
+      orig: { x: number; y: number; w: number; h: number };
+    }
+  | {
+      mode: "rotate";
+      id: string;
+      centerX: number;
+      centerY: number;
+      startAngle: number;
+      origRotation: number;
+    };
+
+/* -------------------- Marker on canvas -------------------- */
+
+function MarkerOnImage({
+  marker,
+  number,
+  selected,
+  containerRect,
+  onSelect,
+  onDelete,
+  onPointerDownBody,
+  onPointerDownHandle,
+}: {
+  marker: Marker;
+  number: number;
+  selected: boolean;
+  containerRect: DOMRect | null;
+  onSelect: () => void;
+  onDelete: () => void;
+  onPointerDownBody: (e: React.PointerEvent) => void;
+  onPointerDownHandle: (
+    e: React.PointerEvent,
+    handle: "nw" | "ne" | "sw" | "se" | "rotate",
+  ) => void;
+}) {
+  const meta = MARKER_BY_KIND[marker.kind];
+  if (!containerRect) return null;
+  const left = marker.x * 100;
+  const top = marker.y * 100;
+  const widthPct = marker.w * 100;
+  const heightPct = marker.h * 100;
+
+  return (
+    <div
+      className="absolute"
+      style={{
+        left: `${left}%`,
+        top: `${top}%`,
+        width: `${widthPct}%`,
+        height: `${heightPct}%`,
+        transform: `rotate(${marker.rotation}deg)`,
+        transformOrigin: "center center",
+      }}
+      onPointerDown={(e) => {
+        e.stopPropagation();
+        onSelect();
+        onPointerDownBody(e);
+      }}
     >
-      {number}
-      {onDelete && (
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete();
-          }}
-          className="absolute -right-1.5 -top-1.5 hidden h-4 w-4 items-center justify-center rounded-full border border-border bg-white text-foreground shadow group-hover:flex"
-          aria-label="Excluir marcação"
-        >
-          <X className="h-2.5 w-2.5" />
-        </button>
+      {/* shape */}
+      <div className="pointer-events-none absolute inset-0">
+        {meta.shape === "seta" ? (
+          <ArrowSVG color={meta.color} />
+        ) : (
+          <RectShape color={meta.color} />
+        )}
+      </div>
+
+      {/* numbered badge */}
+      <div
+        className="pointer-events-none absolute -left-2 -top-2 flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[10px] font-bold text-white shadow ring-2 ring-white"
+        style={{ backgroundColor: meta.color }}
+      >
+        {number}
+      </div>
+
+      {selected && (
+        <>
+          {/* selection box */}
+          <div className="pointer-events-none absolute inset-0 border border-dashed border-primary/70" />
+          {/* corners */}
+          {(["nw", "ne", "sw", "se"] as const).map((c) => {
+            const pos: React.CSSProperties = { position: "absolute" };
+            if (c.includes("n")) pos.top = -5;
+            else pos.bottom = -5;
+            if (c.includes("w")) pos.left = -5;
+            else pos.right = -5;
+            const cursor =
+              c === "nw" || c === "se" ? "nwse-resize" : "nesw-resize";
+            return (
+              <div
+                key={c}
+                role="button"
+                aria-label={`Redimensionar ${c}`}
+                onPointerDown={(e) => {
+                  e.stopPropagation();
+                  onPointerDownHandle(e, c);
+                }}
+                style={{ ...pos, cursor }}
+                className="h-2.5 w-2.5 rounded-sm border border-primary bg-white"
+              />
+            );
+          })}
+          {/* rotate handle */}
+          <div
+            role="button"
+            aria-label="Rotacionar"
+            onPointerDown={(e) => {
+              e.stopPropagation();
+              onPointerDownHandle(e, "rotate");
+            }}
+            style={{
+              position: "absolute",
+              left: "50%",
+              top: -22,
+              transform: "translateX(-50%)",
+              cursor: "grab",
+            }}
+            className="h-3 w-3 rounded-full border border-primary bg-white"
+          />
+          {/* delete */}
+          <button
+            type="button"
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete();
+            }}
+            className="absolute -right-3 -top-3 flex h-5 w-5 items-center justify-center rounded-full border border-border bg-white text-foreground shadow"
+            aria-label="Excluir marcação"
+          >
+            <X className="h-3 w-3" />
+          </button>
+        </>
       )}
     </div>
   );
 }
+
+/* -------------------- Main block -------------------- */
 
 export function BlocoImagem({
   bloco,
@@ -82,6 +248,8 @@ export function BlocoImagem({
   const [dragOver, setDragOver] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const imgWrapRef = useRef<HTMLDivElement>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const dragRef = useRef<DragState | null>(null);
 
   const markers = bloco.markers ?? [];
   const instrucoes =
@@ -94,34 +262,135 @@ export function BlocoImagem({
     onChange({ src: url, nome: bloco.nome || file.name.replace(/\.[^.]+$/, "") });
   };
 
-  const computeRelative = (e: React.DragEvent): { x: number; y: number } | null => {
-    const el = imgWrapRef.current;
-    if (!el) return null;
-    const rect = el.getBoundingClientRect();
-    const x = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
-    const y = Math.min(1, Math.max(0, (e.clientY - rect.top) / rect.height));
-    return { x, y };
-  };
-
+  /* Drop from palette */
   const onImageDrop = (e: React.DragEvent) => {
     e.preventDefault();
-    const pos = computeRelative(e);
-    if (!pos) return;
-    const newKind = e.dataTransfer.getData(DRAG_NEW) as MarkerKind | "";
-    const moveId = e.dataTransfer.getData(DRAG_MOVE);
-    if (moveId) {
-      const newMarkers = markers.map((m) => (m.id === moveId ? { ...m, ...pos } : m));
-      onChange({ markers: newMarkers });
-      return;
-    }
-    if (newKind) {
-      const marker: Marker = { id: mid(), kind: newKind, x: pos.x, y: pos.y };
-      const newMarkers = [...markers, marker];
-      const newInstrucoes = [
+    const kind = e.dataTransfer.getData(DRAG_NEW) as MarkerKind | "";
+    if (!kind) return;
+    const el = imgWrapRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const size = defaultSize(kind);
+    const cx = (e.clientX - rect.left) / rect.width;
+    const cy = (e.clientY - rect.top) / rect.height;
+    const marker: Marker = {
+      id: mid(),
+      kind,
+      x: Math.max(0, Math.min(1 - size.w, cx - size.w / 2)),
+      y: Math.max(0, Math.min(1 - size.h, cy - size.h / 2)),
+      w: size.w,
+      h: size.h,
+      rotation: 0,
+    };
+    onChange({
+      markers: [...markers, marker],
+      instrucoesItens: [
         ...instrucoes,
-        { id: marker.id, texto: MARKER_BY_KIND[newKind].sugestao({}) },
-      ];
-      onChange({ markers: newMarkers, instrucoesItens: newInstrucoes });
+        { id: marker.id, texto: MARKER_BY_KIND[kind].sugestao({}) },
+      ],
+    });
+    setSelectedId(marker.id);
+  };
+
+  /* Pointer interactions: move / resize / rotate */
+  useEffect(() => {
+    const onMove = (ev: PointerEvent) => {
+      const st = dragRef.current;
+      if (!st) return;
+      const el = imgWrapRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+
+      if (st.mode === "move") {
+        const dx = (ev.clientX - st.startX) / rect.width;
+        const dy = (ev.clientY - st.startY) / rect.height;
+        onChange({
+          markers: markers.map((m) => {
+            if (m.id !== st.id) return m;
+            return {
+              ...m,
+              x: Math.max(0, Math.min(1 - m.w, st.origX + dx)),
+              y: Math.max(0, Math.min(1 - m.h, st.origY + dy)),
+            };
+          }),
+        });
+      } else if (st.mode === "resize") {
+        const dx = (ev.clientX - st.startX) / rect.width;
+        const dy = (ev.clientY - st.startY) / rect.height;
+        let { x, y, w, h } = st.orig;
+        if (st.corner.includes("e")) w = Math.max(0.02, st.orig.w + dx);
+        if (st.corner.includes("s")) h = Math.max(0.02, st.orig.h + dy);
+        if (st.corner.includes("w")) {
+          w = Math.max(0.02, st.orig.w - dx);
+          x = st.orig.x + (st.orig.w - w);
+        }
+        if (st.corner.includes("n")) {
+          h = Math.max(0.02, st.orig.h - dy);
+          y = st.orig.y + (st.orig.h - h);
+        }
+        onChange({
+          markers: markers.map((m) => (m.id === st.id ? { ...m, x, y, w, h } : m)),
+        });
+      } else if (st.mode === "rotate") {
+        const angle = Math.atan2(ev.clientY - st.centerY, ev.clientX - st.centerX);
+        const deg = (angle - st.startAngle) * (180 / Math.PI) + st.origRotation;
+        onChange({
+          markers: markers.map((m) =>
+            m.id === st.id ? { ...m, rotation: Math.round(deg) } : m,
+          ),
+        });
+      }
+    };
+    const onUp = () => {
+      dragRef.current = null;
+    };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+    };
+  }, [markers, onChange]);
+
+  const startMove = (e: React.PointerEvent, m: Marker) => {
+    dragRef.current = {
+      mode: "move",
+      id: m.id,
+      startX: e.clientX,
+      startY: e.clientY,
+      origX: m.x,
+      origY: m.y,
+    };
+  };
+
+  const startHandle = (
+    e: React.PointerEvent,
+    m: Marker,
+    handle: "nw" | "ne" | "sw" | "se" | "rotate",
+  ) => {
+    const el = imgWrapRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    if (handle === "rotate") {
+      const cx = rect.left + (m.x + m.w / 2) * rect.width;
+      const cy = rect.top + (m.y + m.h / 2) * rect.height;
+      dragRef.current = {
+        mode: "rotate",
+        id: m.id,
+        centerX: cx,
+        centerY: cy,
+        startAngle: Math.atan2(e.clientY - cy, e.clientX - cx),
+        origRotation: m.rotation,
+      };
+    } else {
+      dragRef.current = {
+        mode: "resize",
+        id: m.id,
+        corner: handle,
+        startX: e.clientX,
+        startY: e.clientY,
+        orig: { x: m.x, y: m.y, w: m.w, h: m.h },
+      };
     }
   };
 
@@ -130,6 +399,7 @@ export function BlocoImagem({
       markers: markers.filter((m) => m.id !== id),
       instrucoesItens: instrucoes.filter((i) => i.id !== id),
     });
+    if (selectedId === id) setSelectedId(null);
   };
 
   const updateInstrucao = (id: string, texto: string) => {
@@ -140,9 +410,7 @@ export function BlocoImagem({
 
   const addManual = () => {
     const id = mid();
-    onChange({
-      instrucoesItens: [...instrucoes, { id, texto: "" }],
-    });
+    onChange({ instrucoesItens: [...instrucoes, { id, texto: "" }] });
   };
 
   const gerarComIA = () => {
@@ -159,15 +427,16 @@ export function BlocoImagem({
             : base,
       };
     });
-    // include any extra manual items (without markers) untouched
     const extra = instrucoes.filter((i) => !markers.some((m) => m.id === i.id));
     onChange({ instrucoesItens: [...refined, ...extra] });
   };
 
+  const containerRect = imgWrapRef.current?.getBoundingClientRect() ?? null;
+
   return (
     <div className="rounded-xl border border-border bg-muted/20 p-5">
-      <div className="grid gap-5 lg:grid-cols-[1fr_260px]">
-        {/* Left: image + drop zone */}
+      <div className="grid gap-5 lg:grid-cols-[1fr_280px]">
+        {/* Left: image + canvas */}
         <div>
           {!bloco.src ? (
             <div
@@ -201,49 +470,49 @@ export function BlocoImagem({
                 ref={imgWrapRef}
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={onImageDrop}
+                onPointerDown={() => setSelectedId(null)}
                 className="relative inline-block w-full overflow-hidden rounded-lg border border-border bg-card"
               >
                 <img
                   src={bloco.src}
                   alt={bloco.nome || "Preview"}
-                  className="block max-h-[460px] w-full object-contain"
+                  className="block max-h-[520px] w-full object-contain"
                   draggable={false}
                 />
                 {markers.map((m, idx) => (
-                  <div
+                  <MarkerOnImage
                     key={m.id}
-                    className="absolute"
-                    style={{
-                      left: `${m.x * 100}%`,
-                      top: `${m.y * 100}%`,
-                      transform: "translate(-50%, -50%)",
-                    }}
-                  >
-                    <MarkerShape
-                      kind={m.kind}
-                      number={idx + 1}
-                      onDelete={() => removeMarker(m.id)}
-                      draggable
-                      onDragStart={(e) => {
-                        e.dataTransfer.setData(DRAG_MOVE, m.id);
-                        e.dataTransfer.effectAllowed = "move";
-                      }}
-                    />
-                  </div>
+                    marker={m}
+                    number={idx + 1}
+                    selected={selectedId === m.id}
+                    containerRect={containerRect}
+                    onSelect={() => setSelectedId(m.id)}
+                    onDelete={() => removeMarker(m.id)}
+                    onPointerDownBody={(e) => startMove(e, m)}
+                    onPointerDownHandle={(e, h) => startHandle(e, m, h)}
+                  />
                 ))}
                 {markers.length === 0 && (
                   <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/55 to-transparent p-3 text-center text-xs font-medium text-white">
-                    Arraste itens da legenda à direita para marcar pontos da imagem
+                    Arraste formas da legenda à direita para marcar a imagem
                   </div>
                 )}
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => inputRef.current?.click()}
-              >
-                <ImagePlus className="mr-1.5 h-4 w-4" /> Trocar imagem
-              </Button>
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => inputRef.current?.click()}
+                >
+                  <ImagePlus className="mr-1.5 h-4 w-4" /> Trocar imagem
+                </Button>
+                {selectedId && (
+                  <span className="text-xs text-muted-foreground">
+                    Forma selecionada — arraste para mover, use as alças para
+                    redimensionar e o ponto superior para rotacionar.
+                  </span>
+                )}
+              </div>
             </div>
           )}
           <input
@@ -255,7 +524,7 @@ export function BlocoImagem({
           />
         </div>
 
-        {/* Right: legend palette */}
+        {/* Right: palette */}
         <aside className="rounded-lg border border-border bg-card p-3">
           <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Legenda — arraste para a imagem
@@ -269,14 +538,15 @@ export function BlocoImagem({
                   e.dataTransfer.setData(DRAG_NEW, m.kind);
                   e.dataTransfer.effectAllowed = "copy";
                 }}
-                className="group flex cursor-grab items-start gap-2 rounded-md border border-transparent p-2 hover:border-border hover:bg-muted/40 active:cursor-grabbing"
+                className="group flex cursor-grab items-start gap-2.5 rounded-md border border-transparent p-2 hover:border-border hover:bg-muted/40 active:cursor-grabbing"
               >
-                <GripVertical className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
-                <div className="mt-0.5">
-                  <MarkerShape kind={m.kind} number={0} />
+                <div className="flex h-8 w-12 shrink-0 items-center justify-center">
+                  <PalettePreview kind={m.kind} />
                 </div>
                 <div className="min-w-0">
-                  <div className="text-[12px] font-semibold leading-tight">{m.label}</div>
+                  <div className="text-[12px] font-semibold leading-tight">
+                    {m.label}
+                  </div>
                   <div className="text-[11px] leading-snug text-muted-foreground">
                     {m.descricao}
                   </div>
@@ -287,7 +557,7 @@ export function BlocoImagem({
         </aside>
       </div>
 
-      {/* Below: metadata fields */}
+      {/* Metadata */}
       <div className="mt-5 grid gap-4 sm:grid-cols-2">
         <div className="space-y-1.5">
           <Label className="text-xs font-medium">Nome da imagem</Label>
@@ -301,7 +571,9 @@ export function BlocoImagem({
           <Label className="text-xs font-medium">Tipo de interface</Label>
           <Select
             value={bloco.interfaceTipo}
-            onValueChange={(v) => onChange({ interfaceTipo: v as BlocoImagemT["interfaceTipo"] })}
+            onValueChange={(v) =>
+              onChange({ interfaceTipo: v as BlocoImagemT["interfaceTipo"] })
+            }
           >
             <SelectTrigger>
               <SelectValue />
@@ -314,7 +586,7 @@ export function BlocoImagem({
         </div>
       </div>
 
-      {/* Instructions list */}
+      {/* Instructions */}
       <div className="mt-5">
         <div className="mb-2 flex items-center justify-between">
           <Label className="text-xs font-medium">Instruções da imagem</Label>
@@ -335,23 +607,21 @@ export function BlocoImagem({
         </div>
         {instrucoes.length === 0 ? (
           <p className="rounded-md border border-dashed border-border bg-card px-3 py-4 text-center text-xs italic text-muted-foreground">
-            Arraste itens da legenda para a imagem e as instruções serão criadas
+            Arraste formas da legenda para a imagem e as instruções serão criadas
             automaticamente em ordem.
           </p>
         ) : (
           <ol className="space-y-2">
             {instrucoes.map((item, idx) => {
               const marker = markers.find((m) => m.id === item.id);
+              const color = marker ? MARKER_BY_KIND[marker.kind].color : undefined;
               return (
                 <li key={item.id} className="flex items-start gap-2">
-                  <div className="flex w-10 shrink-0 items-center justify-center pt-2">
-                    {marker ? (
-                      <MarkerShape kind={marker.kind} number={idx + 1} />
-                    ) : (
-                      <span className="text-sm font-semibold text-muted-foreground">
-                        {ordinal(idx + 1)}
-                      </span>
-                    )}
+                  <div
+                    className="flex h-7 min-w-7 items-center justify-center rounded-full px-1 text-[11px] font-bold text-white"
+                    style={{ backgroundColor: color ?? "hsl(var(--muted-foreground))" }}
+                  >
+                    {idx + 1}
                   </div>
                   <Input
                     value={item.texto}
@@ -374,6 +644,10 @@ export function BlocoImagem({
             })}
           </ol>
         )}
+        <p className="mt-2 text-[11px] text-muted-foreground">
+          A ordem das formas inseridas na imagem define a ordem das instruções
+          numeradas (1º, 2º, 3º…).
+        </p>
       </div>
     </div>
   );
