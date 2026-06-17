@@ -13,8 +13,14 @@ export type MarkerKind =
 export type Marker = {
   id: string;
   kind: MarkerKind;
-  x: number; // 0..1 relative to image
-  y: number; // 0..1 relative to image
+  /** position of top-left, relative (0..1) to image */
+  x: number;
+  y: number;
+  /** size relative (0..1) to image */
+  w: number;
+  h: number;
+  /** rotation in degrees */
+  rotation: number;
 };
 
 export type InstrucaoItem = { id: string; texto: string };
