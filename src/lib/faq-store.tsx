@@ -20,6 +20,8 @@ type FaqContextValue = {
   renameGuia: (id: string, nome: string) => void;
   deleteGuia: (id: string) => void;
   updateBlocos: (guiaId: string, blocos: Bloco[]) => void;
+  addCategoria: (nome: string) => Categoria;
+  setGuiaCategorias: (guiaId: string, categorias: Categoria[]) => void;
 };
 
 const FaqCtx = createContext<FaqContextValue | null>(null);
@@ -52,6 +54,7 @@ const addToTree = (guias: Guia[], parentId: string | null, novo: Guia): Guia[] =
 
 export function FaqProvider({ children }: { children: ReactNode }) {
   const [guias, setGuias] = useState<Guia[]>(SEED_GUIAS);
+  const [categorias, setCategorias] = useState<Categoria[]>(CATEGORIAS);
   const [selectedId, setSelectedId] = useState<string>("g1-1");
   const [search, setSearch] = useState("");
   const [categoriaFiltro, setCategoriaFiltro] = useState<string>("todas");
@@ -61,7 +64,7 @@ export function FaqProvider({ children }: { children: ReactNode }) {
 
   const value: FaqContextValue = {
     guias,
-    categorias: CATEGORIAS,
+    categorias,
     selectedId,
     setSelectedId,
     selected,
@@ -94,6 +97,15 @@ export function FaqProvider({ children }: { children: ReactNode }) {
             ? { ...g, blocos, updatedAt: new Date().toISOString(), updatedBy: "Você" }
             : g,
         ),
+      ),
+    addCategoria: (nome) => {
+      const nova: Categoria = { id: `c-${Date.now()}`, nome };
+      setCategorias((prev) => [...prev, nova]);
+      return nova;
+    },
+    setGuiaCategorias: (guiaId, cats) =>
+      setGuias((prev) =>
+        mapTree(prev, (g) => (g.id === guiaId ? { ...g, categorias: cats } : g)),
       ),
   };
 
