@@ -435,8 +435,8 @@ export function BlocoImagem({
 
   return (
     <div className="rounded-xl border border-border bg-muted/20 p-5">
-      <div className="grid gap-5 lg:grid-cols-[1fr_280px]">
-        {/* Left: image + canvas */}
+      <div className="space-y-4">
+        {/* Image + canvas */}
         <div>
           {!bloco.src ? (
             <div
@@ -476,7 +476,7 @@ export function BlocoImagem({
                 <img
                   src={bloco.src}
                   alt={bloco.nome || "Preview"}
-                  className="block max-h-[520px] w-full object-contain"
+                  className="block max-h-[720px] w-full object-contain"
                   draggable={false}
                 />
                 {markers.map((m, idx) => (
@@ -494,7 +494,7 @@ export function BlocoImagem({
                 ))}
                 {markers.length === 0 && (
                   <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/55 to-transparent p-3 text-center text-xs font-medium text-white">
-                    Arraste formas da legenda à direita para marcar a imagem
+                    Arraste formas da legenda abaixo para marcar a imagem
                   </div>
                 )}
               </div>
@@ -524,12 +524,12 @@ export function BlocoImagem({
           />
         </div>
 
-        {/* Right: palette */}
-        <aside className="rounded-lg border border-border bg-card p-3">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        {/* Palette below image */}
+        <aside className="rounded-lg border border-border bg-card p-4">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Legenda — arraste para a imagem
           </p>
-          <ul className="space-y-1.5">
+          <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {MARKERS.map((m) => (
               <li
                 key={m.kind}
