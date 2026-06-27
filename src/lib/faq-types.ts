@@ -28,13 +28,10 @@ export type MarkerKind =
 export type Marker = {
   id: string;
   kind: MarkerKind;
-  /** position of top-left, relative (0..1) to image */
   x: number;
   y: number;
-  /** size relative (0..1) to image */
   w: number;
   h: number;
-  /** rotation in degrees */
   rotation: number;
 };
 
@@ -48,19 +45,14 @@ export type BlocoImagem = {
   src?: string;
   nome: string;
   interfaceTipo: "Aplicativo" | "Site Administrativo";
-  /** legacy / fallback free-form instructions */
   instrucoes: string;
-  /** ordered visual markings placed on the image */
   markers?: Marker[];
-  /** parallel array to markers (same index) */
   instrucoesItens?: InstrucaoItem[];
 };
 export type BlocoInstrucao = {
   tipo: "instrucao";
   id: string;
-  /** new multi-item structure */
   itens?: InstrucaoItem[];
-  /** legacy single-textarea field, kept for back-compat */
   conteudo?: string;
 };
 export type BlocoObservacao = { tipo: "observacao"; id: string; conteudo: string };
@@ -79,17 +71,28 @@ export type Bloco =
   | BlocoObservacao
   | BlocoVideo;
 
-export type Guia = {
+/** Tipo hierárquico de um nó na árvore da FAQ. */
+export type FaqNodeTipo = "tema" | "guia" | "assunto";
+
+/**
+ * Entidade principal da árvore da FAQ.
+ * Representa Tema, Guia ou Assunto conforme `tipo`.
+ * Categorias são guardadas como IDs; a lista oficial vive no store.
+ */
+export type FaqNode = {
   id: string;
+  tipo: FaqNodeTipo;
   nome: string;
-  categorias: Categoria[];
-  filhos: Guia[];
+  categoriaIds: string[];
+  filhos: FaqNode[];
   blocos: Bloco[];
   updatedAt: string;
   updatedBy: string;
 };
 
-/** Fixed instruction header texts shown at the top of certain blocks. */
+/** Alias retrocompatível — código antigo pode continuar referenciando `Guia`. */
+export type Guia = FaqNode;
+
 export const CONTEXTO_HEADER =
   "Contexto: Este parágrafo de contexto explica a situação que deve ser dada a resposta do bloco seguinte, mas ela não será dita ao usuário:";
 export const OBSERVACAO_HEADER =
@@ -100,13 +103,20 @@ export const INSTRUCAO_HEADER =
 /** Max hierarchy depth in the sidebar tree (root=0, child=1, grandchild=2). */
 export const MAX_DEPTH = 2;
 
-/** Label per nível hierárquico. */
 export const NIVEL_LABEL = ["Tema", "Guia", "Assunto"] as const;
 export function nivelLabel(depth: number): string {
   return NIVEL_LABEL[depth] ?? "Item";
 }
 
-/** Tipos de bloco permitidos por nível na hierarquia. */
+export const TIPO_POR_NIVEL: Record<number, FaqNodeTipo> = {
+  0: "tema",
+  1: "guia",
+  2: "assunto",
+};
+export function tipoForDepth(depth: number): FaqNodeTipo {
+  return TIPO_POR_NIVEL[depth] ?? "assunto";
+}
+
 export const BLOCOS_POR_NIVEL: Record<number, Array<Bloco["tipo"]>> = {
   0: ["texto", "contexto", "observacao"],
   1: ["texto", "contexto", "observacao"],

@@ -1,79 +1,77 @@
-import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
-import type { Bloco, Categoria, Guia } from "./faq-types";
-import { CATEGORIA_COR_PADRAO } from "./faq-types";
-import { CATEGORIAS, SEED_GUIAS } from "./faq-seed";
+import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
+import type { Bloco, Categoria, FaqNode, Guia } from "./faq-types";
+import { CATEGORIA_COR_PADRAO, tipoForDepth } from "./faq-types";
+import { CATEGORIAS, SEED_NODES } from "./faq-seed";
+import {
+  addNode,
+  depthOf as treeDepthOf,
+  findNode,
+  filterTreeByCategorias,
+  filterTreeByTerm,
+  getCategoriasDoNode,
+  hasCategoria,
+  makeNode,
+  moveBlocoIn,
+  nodeMatchCategoria,
+  removeNode,
+  renameNode,
+  setCategoriaIdsOf,
+  updateBlocosOf,
+} from "./faq-tree";
 
 type DateFilter = "todos" | "hoje" | "7d" | "30d" | "90d" | "custom";
 
 type FaqContextValue = {
-  guias: Guia[];
+  /** Árvore completa de FaqNodes (Temas → Guias → Assuntos). */
+  guias: FaqNode[];
   categorias: Categoria[];
   selectedId: string;
   setSelectedId: (id: string) => void;
-  selected: Guia | null;
-  /** Texto da busca dentro do conteúdo do documento (Ctrl+F). */
+  selected: FaqNode | null;
+
+  /** Busca no conteúdo do documento (Ctrl+F). */
   search: string;
   setSearch: (v: string) => void;
-  /** Índice da ocorrência ativa (0-based). */
   searchIndex: number;
   setSearchIndex: (n: number) => void;
   searchTotal: number;
   setSearchTotal: (n: number) => void;
-  /** Filtro de categorias multi-seleção. */
+
+  /** Filtros aplicados na sidebar. */
   categoriasFiltro: string[];
   toggleCategoriaFiltro: (id: string) => void;
   clearCategoriasFiltro: () => void;
   dateFiltro: DateFilter;
   setDateFiltro: (v: DateFilter) => void;
+
+  /** Mutações na árvore. */
   addGuia: (parentId: string | null, nome: string) => void;
   renameGuia: (id: string, nome: string) => void;
   deleteGuia: (id: string) => void;
   depthOf: (id: string) => number;
-  updateBlocos: (guiaId: string, blocos: Bloco[]) => void;
-  moveBloco: (guiaId: string, fromIndex: number, toIndex: number) => void;
+  updateBlocos: (nodeId: string, blocos: Bloco[]) => void;
+  moveBloco: (nodeId: string, fromIndex: number, toIndex: number) => void;
+
+  /** Categorias. */
   addCategoria: (nome: string, cor?: string) => Categoria;
-  setGuiaCategorias: (guiaId: string, categorias: Categoria[]) => void;
+  /** Substitui as categorias do nó (recebe lista completa de Categoria). */
+  setGuiaCategorias: (nodeId: string, categorias: Categoria[]) => void;
+  /** Substitui apenas os IDs de categoria de um nó. */
+  setNodeCategoriaIds: (nodeId: string, ids: string[]) => void;
+  /** Resolve os objetos Categoria a partir dos IDs de um nó. */
+  resolveCategorias: (node: FaqNode) => Categoria[];
+  /** Helpers de checagem. */
+  hasCategoria: (node: FaqNode, categoriaId: string) => boolean;
+  nodeMatchCategoria: (node: FaqNode, ids: string[]) => boolean;
 };
 
 const FaqCtx = createContext<FaqContextValue | null>(null);
 
-const findFlat = (guias: Guia[], id: string): Guia | null => {
-  for (const g of guias) {
-    if (g.id === id) return g;
-    const f = findFlat(g.filhos, id);
-    if (f) return f;
-  }
-  return null;
-};
-
-const depthIn = (guias: Guia[], id: string, depth: number): number => {
-  for (const g of guias) {
-    if (g.id === id) return depth;
-    const d = depthIn(g.filhos, id, depth + 1);
-    if (d >= 0) return d;
-  }
-  return -1;
-};
-
-const mapTree = (guias: Guia[], fn: (g: Guia) => Guia): Guia[] =>
-  guias.map((g) => fn({ ...g, filhos: mapTree(g.filhos, fn) }));
-
-const removeFromTree = (guias: Guia[], id: string): Guia[] =>
-  guias
-    .filter((g) => g.id !== id)
-    .map((g) => ({ ...g, filhos: removeFromTree(g.filhos, id) }));
-
-const addToTree = (guias: Guia[], parentId: string | null, novo: Guia): Guia[] => {
-  if (parentId === null) return [...guias, novo];
-  return guias.map((g) =>
-    g.id === parentId
-      ? { ...g, filhos: [...g.filhos, novo] }
-      : { ...g, filhos: addToTree(g.filhos, parentId, novo) },
-  );
-};
+const newId = (prefix = "n") =>
+  `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
 
 export function FaqProvider({ children }: { children: ReactNode }) {
-  const [guias, setGuias] = useState<Guia[]>(SEED_GUIAS);
+  const [guias, setGuias] = useState<FaqNode[]>(SEED_NODES);
   const [categorias, setCategorias] = useState<Categoria[]>(CATEGORIAS);
   const [selectedId, setSelectedId] = useState<string>("g1-1");
   const [search, setSearchRaw] = useState("");
@@ -82,12 +80,19 @@ export function FaqProvider({ children }: { children: ReactNode }) {
   const [categoriasFiltro, setCategoriasFiltro] = useState<string[]>([]);
   const [dateFiltro, setDateFiltro] = useState<DateFilter>("todos");
 
-  const selected = useMemo(() => findFlat(guias, selectedId), [guias, selectedId]);
+  const selected = useMemo(() => findNode(guias, selectedId), [guias, selectedId]);
 
   const setSearch = (v: string) => {
     setSearchRaw(v);
     setSearchIndex(0);
   };
+
+  const depthOf = useCallback((id: string) => treeDepthOf(guias, id), [guias]);
+
+  const resolveCategorias = useCallback(
+    (node: FaqNode) => getCategoriasDoNode(node, categorias),
+    [categorias],
+  );
 
   const value: FaqContextValue = {
     guias,
@@ -109,53 +114,27 @@ export function FaqProvider({ children }: { children: ReactNode }) {
     clearCategoriasFiltro: () => setCategoriasFiltro([]),
     dateFiltro,
     setDateFiltro,
+
     addGuia: (parentId, nome) => {
-      const novo: Guia = {
-        id: `g-${Date.now()}`,
+      const parentDepth = parentId ? treeDepthOf(guias, parentId) : -1;
+      const tipo = tipoForDepth(parentDepth + 1);
+      const novo = makeNode({
+        id: newId("g"),
         nome,
-        categorias: [],
-        filhos: [],
-        blocos: [],
+        tipo,
         updatedAt: new Date().toISOString(),
-        updatedBy: "Você",
-      };
-      setGuias((prev) => addToTree(prev, parentId, novo));
+      });
+      setGuias((prev) => addNode(prev, parentId, novo));
       setSelectedId(novo.id);
     },
-    renameGuia: (id, nome) =>
-      setGuias((prev) => mapTree(prev, (g) => (g.id === id ? { ...g, nome } : g))),
-    deleteGuia: (id) => setGuias((prev) => removeFromTree(prev, id)),
-    depthOf: (id) => depthIn(guias, id, 0),
-    updateBlocos: (guiaId, blocos) =>
-      setGuias((prev) =>
-        mapTree(prev, (g) =>
-          g.id === guiaId
-            ? { ...g, blocos, updatedAt: new Date().toISOString(), updatedBy: "Você" }
-            : g,
-        ),
-      ),
-    moveBloco: (guiaId, fromIndex, toIndex) =>
-      setGuias((prev) =>
-        mapTree(prev, (g) => {
-          if (g.id !== guiaId) return g;
-          const arr = [...g.blocos];
-          if (
-            fromIndex < 0 ||
-            fromIndex >= arr.length ||
-            toIndex < 0 ||
-            toIndex >= arr.length
-          )
-            return g;
-          const [item] = arr.splice(fromIndex, 1);
-          arr.splice(toIndex, 0, item);
-          return {
-            ...g,
-            blocos: arr,
-            updatedAt: new Date().toISOString(),
-            updatedBy: "Você",
-          };
-        }),
-      ),
+    renameGuia: (id, nome) => setGuias((prev) => renameNode(prev, id, nome)),
+    deleteGuia: (id) => setGuias((prev) => removeNode(prev, id)),
+    depthOf,
+    updateBlocos: (nodeId, blocos) =>
+      setGuias((prev) => updateBlocosOf(prev, nodeId, blocos, "Você")),
+    moveBloco: (nodeId, fromIndex, toIndex) =>
+      setGuias((prev) => moveBlocoIn(prev, nodeId, fromIndex, toIndex, "Você")),
+
     addCategoria: (nome, cor) => {
       const nova: Categoria = {
         id: `c-${Date.now()}`,
@@ -165,10 +144,13 @@ export function FaqProvider({ children }: { children: ReactNode }) {
       setCategorias((prev) => [...prev, nova]);
       return nova;
     },
-    setGuiaCategorias: (guiaId, cats) =>
-      setGuias((prev) =>
-        mapTree(prev, (g) => (g.id === guiaId ? { ...g, categorias: cats } : g)),
-      ),
+    setGuiaCategorias: (nodeId, cats) =>
+      setGuias((prev) => setCategoriaIdsOf(prev, nodeId, cats.map((c) => c.id))),
+    setNodeCategoriaIds: (nodeId, ids) =>
+      setGuias((prev) => setCategoriaIdsOf(prev, nodeId, ids)),
+    resolveCategorias,
+    hasCategoria,
+    nodeMatchCategoria,
   };
 
   return <FaqCtx.Provider value={value}>{children}</FaqCtx.Provider>;
@@ -180,15 +162,16 @@ export function useFaq() {
   return ctx;
 }
 
-/** True se o guia ou algum descendente tem ao menos uma das categorias. */
+/**
+ * Backwards-compatible: verdadeiro se o nó ou algum descendente tem ao menos
+ * uma das categorias informadas (por ID).
+ */
 export function guiaMatchAnyCategoria(g: Guia, ids: string[]): boolean {
-  if (ids.length === 0) return true;
-  if (g.categorias.some((c) => ids.includes(c.id))) return true;
-  return g.filhos.some((f) => guiaMatchAnyCategoria(f, ids));
+  return nodeMatchCategoria(g, ids);
 }
 
-/** Concatenate all searchable text of a guia (used by global text search). */
-export function guiaSearchableText(g: Guia): string {
+/** Texto pesquisável agregado de um nó (não inclui descendentes). */
+export function guiaSearchableText(g: FaqNode): string {
   const parts: string[] = [g.nome];
   for (const b of g.blocos) {
     if (b.tipo === "texto" || b.tipo === "contexto" || b.tipo === "observacao") {
@@ -205,3 +188,5 @@ export function guiaSearchableText(g: Guia): string {
   }
   return parts.join(" ").toLowerCase();
 }
+
+export { filterTreeByCategorias, filterTreeByTerm };
