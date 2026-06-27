@@ -99,3 +99,20 @@ export const INSTRUCAO_HEADER =
 
 /** Max hierarchy depth in the sidebar tree (root=0, child=1, grandchild=2). */
 export const MAX_DEPTH = 2;
+
+/** Label per nível hierárquico. */
+export const NIVEL_LABEL = ["Tema", "Guia", "Assunto"] as const;
+export function nivelLabel(depth: number): string {
+  return NIVEL_LABEL[depth] ?? "Item";
+}
+
+/** Tipos de bloco permitidos por nível na hierarquia. */
+export const BLOCOS_POR_NIVEL: Record<number, Array<Bloco["tipo"]>> = {
+  0: ["texto", "contexto", "observacao"],
+  1: ["texto", "contexto", "observacao"],
+  2: ["texto", "contexto", "imagem", "video", "instrucao", "observacao"],
+};
+
+export function blocosPermitidos(depth: number): Array<Bloco["tipo"]> {
+  return BLOCOS_POR_NIVEL[depth] ?? BLOCOS_POR_NIVEL[2];
+}
