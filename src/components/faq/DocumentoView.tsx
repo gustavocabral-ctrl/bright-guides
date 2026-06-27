@@ -79,6 +79,7 @@ export function DocumentoView() {
   }, [selected?.id]);
 
   const nivel = selected ? depthOf(selected.id) : 2;
+  const selectedCategorias = selected ? resolveCategorias(selected) : [];
   const tiposPermitidos = useMemo(() => blocosPermitidos(nivel), [nivel]);
 
   // Re-run highlight whenever selection, edit mode, or search/index change.
