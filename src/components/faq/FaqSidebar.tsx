@@ -71,12 +71,14 @@ function filterTreeByCategorias(guias: Guia[], cats: string[]): Guia[] {
 }
 
 function CategoriaChips({ guia }: { guia: Guia }) {
-  if (guia.categorias.length === 0) {
+  const { resolveCategorias } = useFaq();
+  const cats = resolveCategorias(guia);
+  if (cats.length === 0) {
     return <span className="text-xs italic text-muted-foreground">Sem categoria</span>;
   }
   return (
     <div className="flex flex-wrap gap-1.5">
-      {guia.categorias.map((c) => (
+      {cats.map((c) => (
         <span
           key={c.id}
           className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium"
