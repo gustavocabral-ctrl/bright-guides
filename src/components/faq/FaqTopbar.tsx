@@ -1,5 +1,12 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Calendar as CalendarIcon, MessageSquare, Search, FileText } from "lucide-react";
+import {
+  Calendar as CalendarIcon,
+  ChevronDown,
+  ChevronUp,
+  MessageSquare,
+  Search,
+  FileText,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,43 +23,78 @@ export function FaqTopbar() {
   const {
     search,
     setSearch,
-    categoriaFiltro,
-    setCategoriaFiltro,
+    searchIndex,
+    setSearchIndex,
+    searchTotal,
     dateFiltro,
     setDateFiltro,
-    categorias,
   } = useFaq();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isChat = pathname.endsWith("/chat");
 
+  const next = () => {
+    if (searchTotal === 0) return;
+    setSearchIndex((searchIndex + 1) % searchTotal);
+  };
+  const prev = () => {
+    if (searchTotal === 0) return;
+    setSearchIndex((searchIndex - 1 + searchTotal) % searchTotal);
+  };
+
   return (
     <header className="border-b border-border bg-[var(--surface)] px-6 py-3">
       <div className="flex items-center justify-between gap-4">
-        {/* Left: Filters */}
         <div className="flex items-center gap-2">
           <div className="relative">
             <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  if (e.shiftKey) prev();
+                  else next();
+                }
+              }}
               placeholder="Buscar no texto do FAQ"
-              className="h-9 w-64 rounded-lg pl-9 text-sm"
+              className="h-9 w-72 rounded-lg pl-9 pr-24 text-sm"
             />
+            {search && (
+              <div className="pointer-events-none absolute right-2 top-1/2 flex -translate-y-1/2 items-center gap-1 text-[11px] text-muted-foreground">
+                <span className="pointer-events-auto tabular-nums">
+                  {searchTotal === 0
+                    ? "0 resultados"
+                    : `${searchIndex + 1} de ${searchTotal}`}
+                </span>
+              </div>
+            )}
           </div>
 
-          <Select value={categoriaFiltro} onValueChange={setCategoriaFiltro}>
-            <SelectTrigger className="h-9 w-44 rounded-lg text-sm">
-              <SelectValue placeholder="Categoria" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todas">Todas as categorias</SelectItem>
-              {categorias.map((c) => (
-                <SelectItem key={c.id} value={c.id}>
-                  {c.nome}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {search && (
+            <div className="flex items-center gap-0.5">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-8"
+                onClick={prev}
+                disabled={searchTotal === 0}
+                aria-label="Resultado anterior"
+              >
+                <ChevronUp className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-8"
+                onClick={next}
+                disabled={searchTotal === 0}
+                aria-label="Próximo resultado"
+              >
+                <ChevronDown className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
 
           <Select value={dateFiltro} onValueChange={(v) => setDateFiltro(v as never)}>
             <SelectTrigger className="h-9 w-52 rounded-lg text-sm">
@@ -74,7 +116,6 @@ export function FaqTopbar() {
           </Button>
         </div>
 
-        {/* Right: View toggle */}
         <div className="inline-flex rounded-lg border border-border bg-muted/50 p-1">
           <Link
             to="/faq/chat"
