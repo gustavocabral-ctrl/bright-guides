@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { BlocoImagem as BlocoImagemT, Marker, MarkerKind } from "@/lib/faq-types";
-import { MARKERS, MARKER_BY_KIND, ordinal } from "@/lib/faq-markers";
+import { MARKERS, MARKER_BY_KIND } from "@/lib/faq-markers";
 import { cn } from "@/lib/utils";
 
 const mid = () => `m-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
