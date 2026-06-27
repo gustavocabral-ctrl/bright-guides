@@ -64,6 +64,7 @@ export function DocumentoView() {
     search,
     searchIndex,
     setSearchTotal,
+    resolveCategorias,
   } = useFaq();
   const [titleEditing, setTitleEditing] = useState(false);
   const [editing, setEditing] = useState(false);
