@@ -35,8 +35,8 @@ export function FaqTopbar() {
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar no FAQ"
-              className="h-9 w-56 rounded-lg pl-9 text-sm"
+              placeholder="Buscar no texto do FAQ"
+              className="h-9 w-64 rounded-lg pl-9 text-sm"
             />
           </div>
 
@@ -55,15 +55,16 @@ export function FaqTopbar() {
           </Select>
 
           <Select value={dateFiltro} onValueChange={(v) => setDateFiltro(v as never)}>
-            <SelectTrigger className="h-9 w-44 rounded-lg text-sm">
+            <SelectTrigger className="h-9 w-52 rounded-lg text-sm">
               <CalendarIcon className="mr-1 h-3.5 w-3.5 text-muted-foreground" />
-              <SelectValue placeholder="Data de update" />
+              <SelectValue placeholder="Data de ajuste" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="todos">Qualquer data</SelectItem>
-              <SelectItem value="hoje">Hoje</SelectItem>
-              <SelectItem value="7d">Últimos 7 dias</SelectItem>
-              <SelectItem value="30d">Últimos 30 dias</SelectItem>
+              <SelectItem value="hoje">Atualizados hoje</SelectItem>
+              <SelectItem value="7d">Atualizados nos últimos 7 dias</SelectItem>
+              <SelectItem value="30d">Atualizados nos últimos 30 dias</SelectItem>
+              <SelectItem value="90d">Atualizados nos últimos 90 dias</SelectItem>
               <SelectItem value="custom">Personalizado</SelectItem>
             </SelectContent>
           </Select>

@@ -1,7 +1,24 @@
-import { Info, AlertCircle } from "lucide-react";
-import type { Bloco } from "@/lib/faq-types";
+import type { Bloco, BlocoInstrucao as BlocoInstrucaoT } from "@/lib/faq-types";
+import {
+  CONTEXTO_HEADER,
+  INSTRUCAO_HEADER,
+  OBSERVACAO_HEADER,
+} from "@/lib/faq-types";
 import { MARKER_BY_KIND, ordinal } from "@/lib/faq-markers";
 import { ArrowSVG, RectShape } from "./blocos/BlocoImagem";
+import { toEmbedSrc } from "./blocos/BlocoVideo";
+
+function instrucaoItens(b: BlocoInstrucaoT) {
+  if (b.itens && b.itens.length > 0) return b.itens;
+  if (b.conteudo) {
+    return b.conteudo
+      .split(/\r?\n/)
+      .map((l) => l.trim())
+      .filter(Boolean)
+      .map((texto, i) => ({ id: `legacy-${i}`, texto }));
+  }
+  return [];
+}
 
 export function DocumentoSalvo({ blocos }: { blocos: Bloco[] }) {
   if (blocos.length === 0) {
@@ -13,26 +30,55 @@ export function DocumentoSalvo({ blocos }: { blocos: Bloco[] }) {
   }
 
   return (
-    <article className="prose-faq space-y-6 text-[15px] leading-relaxed text-foreground">
+    <article className="space-y-4 text-[15px] leading-relaxed text-foreground">
       {blocos.map((b) => {
         if (b.tipo === "texto") {
+          return b.conteudo.split(/\n{2,}/).map((p, i) => (
+            <p key={`${b.id}-${i}`} className="whitespace-pre-wrap">
+              {p}
+            </p>
+          ));
+        }
+
+        if (b.tipo === "contexto") {
           return (
-            <div key={b.id} className="space-y-4">
-              {b.conteudo.split(/\n{2,}/).map((p, i) => (
-                <p key={i} className="whitespace-pre-wrap">
-                  {p}
+            <p key={b.id} className="whitespace-pre-wrap">
+              <span className="font-medium">{CONTEXTO_HEADER}</span>{" "}
+              {b.conteudo}
+            </p>
+          );
+        }
+
+        if (b.tipo === "observacao") {
+          return (
+            <p key={b.id} className="whitespace-pre-wrap">
+              <span className="font-medium">{OBSERVACAO_HEADER}</span>{" "}
+              {b.conteudo}
+            </p>
+          );
+        }
+
+        if (b.tipo === "instrucao") {
+          const itens = instrucaoItens(b);
+          return (
+            <div key={b.id} className="space-y-1.5">
+              <p className="font-medium">{INSTRUCAO_HEADER}</p>
+              {itens.map((i, idx) => (
+                <p key={i.id} className="whitespace-pre-wrap">
+                  {ordinal(idx + 1)} {i.texto}
                 </p>
               ))}
             </div>
           );
         }
+
         if (b.tipo === "imagem") {
           const markers = b.markers ?? [];
           const instrucoes =
             b.instrucoesItens ??
             markers.map((m) => ({ id: m.id, texto: MARKER_BY_KIND[m.kind].sugestao({}) }));
           return (
-            <figure key={b.id} className="my-2 flex flex-col items-center">
+            <div key={b.id} className="space-y-2 py-2">
               {b.src ? (
                 <div className="relative inline-block max-w-full">
                   <img
@@ -70,50 +116,55 @@ export function DocumentoSalvo({ blocos }: { blocos: Bloco[] }) {
                     );
                   })}
                 </div>
-              ) : (
-                <div className="flex h-40 w-full items-center justify-center rounded-md bg-muted text-xs italic text-muted-foreground">
-                  Imagem não carregada
-                </div>
-              )}
-              <figcaption className="mt-3 w-full max-w-xl space-y-1 text-[13px] italic text-muted-foreground">
+              ) : null}
+              <div className="text-[13px] italic text-muted-foreground">
                 {b.nome && <div>Imagem: {b.nome}</div>}
                 {b.interfaceTipo && <div>Interface: {b.interfaceTipo}</div>}
-                {(instrucoes.length > 0 || b.instrucoes) && (
-                  <div className="mt-2 not-italic text-foreground">
-                    {instrucoes.length > 0 ? (
-                      <ol className="space-y-1">
-                        {instrucoes.map((i, idx) => (
-                          <li key={i.id} className="italic">
-                            <span className="mr-1.5 font-semibold not-italic text-foreground">
-                              {ordinal(idx + 1)}
-                            </span>
-                            {i.texto}
-                          </li>
-                        ))}
-                      </ol>
-                    ) : (
-                      <p className="italic">{b.instrucoes}</p>
-                    )}
-                  </div>
-                )}
-              </figcaption>
-            </figure>
+              </div>
+              {instrucoes.length > 0 ? (
+                <div className="space-y-1">
+                  {instrucoes.map((i, idx) => (
+                    <p key={i.id} className="text-[14px]">
+                      {ordinal(idx + 1)} {i.texto}
+                    </p>
+                  ))}
+                </div>
+              ) : b.instrucoes ? (
+                <p className="text-[14px] italic text-muted-foreground">{b.instrucoes}</p>
+              ) : null}
+            </div>
           );
         }
-        if (b.tipo === "instrucao") {
+
+        if (b.tipo === "video") {
+          const src = toEmbedSrc(b.url);
           return (
-            <p key={b.id} className="flex gap-2 text-[15px] leading-relaxed">
-              <Info className="mt-1 h-4 w-4 shrink-0 text-primary" />
-              <span className="whitespace-pre-wrap">{b.conteudo}</span>
-            </p>
+            <div key={b.id} className="space-y-2 py-2">
+              {src ? (
+                <div className="overflow-hidden rounded-md bg-black">
+                  <div
+                    className="relative w-full"
+                    style={{ aspectRatio: "16 / 9", maxHeight: 480 }}
+                  >
+                    <iframe
+                      src={src}
+                      title={b.titulo || "Vídeo"}
+                      className="absolute inset-0 h-full w-full"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  </div>
+                </div>
+              ) : null}
+              <div className="text-[13px] italic text-muted-foreground">
+                {b.titulo && <div className="not-italic font-medium text-foreground">{b.titulo}</div>}
+                {b.descricao && <div>{b.descricao}</div>}
+              </div>
+            </div>
           );
         }
-        return (
-          <p key={b.id} className="flex gap-2 text-[15px] leading-relaxed text-amber-900">
-            <AlertCircle className="mt-1 h-4 w-4 shrink-0 text-amber-600" />
-            <span className="whitespace-pre-wrap">{b.conteudo}</span>
-          </p>
-        );
+
+        return null;
       })}
     </article>
   );

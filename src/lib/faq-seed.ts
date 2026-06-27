@@ -50,8 +50,18 @@ export const SEED_GUIAS: Guia[] = [
           {
             tipo: "instrucao",
             id: "b-cad-2",
-            conteudo: "Tenha em mãos o CNPJ, endereço completo e dados bancários antes de iniciar.",
+            itens: [
+              { id: "i-1", texto: "Acesse o menu Administrativo." },
+              { id: "i-2", texto: "Clique em Estabelecimentos." },
+              { id: "i-3", texto: "Clique em Novo." },
+              { id: "i-4", texto: "Preencha os dados obrigatórios." },
+            ],
           },
+        ],
+        filhos: [
+          leaf("g1-1-1", "Criar estabelecimento", [CATEGORIAS[4]]),
+          leaf("g1-1-2", "Editar estabelecimento", [CATEGORIAS[4]]),
+          leaf("g1-1-3", "Excluir estabelecimento", [CATEGORIAS[4]]),
         ],
       },
       leaf("g1-2", "Usuários", [CATEGORIAS[2]]),
@@ -66,7 +76,14 @@ export const SEED_GUIAS: Guia[] = [
     updatedBy: "Você",
     blocos: [],
     filhos: [
-      leaf("g2-1", "Tabela Simples"),
+      {
+        ...leaf("g2-1", "Tabela Simples"),
+        filhos: [
+          leaf("g2-1-1", "Criar tabela simples"),
+          leaf("g2-1-2", "Configurar valores"),
+          leaf("g2-1-3", "Aplicar tabela"),
+        ],
+      },
       leaf("g2-2", "Tabela Pernoite"),
       leaf("g2-3", "Tabela Especial"),
     ],

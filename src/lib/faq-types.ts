@@ -26,6 +26,7 @@ export type Marker = {
 export type InstrucaoItem = { id: string; texto: string };
 
 export type BlocoTexto = { tipo: "texto"; id: string; conteudo: string };
+export type BlocoContexto = { tipo: "contexto"; id: string; conteudo: string };
 export type BlocoImagem = {
   tipo: "imagem";
   id: string;
@@ -39,9 +40,29 @@ export type BlocoImagem = {
   /** parallel array to markers (same index) */
   instrucoesItens?: InstrucaoItem[];
 };
-export type BlocoInstrucao = { tipo: "instrucao"; id: string; conteudo: string };
+export type BlocoInstrucao = {
+  tipo: "instrucao";
+  id: string;
+  /** new multi-item structure */
+  itens?: InstrucaoItem[];
+  /** legacy single-textarea field, kept for back-compat */
+  conteudo?: string;
+};
 export type BlocoObservacao = { tipo: "observacao"; id: string; conteudo: string };
-export type Bloco = BlocoTexto | BlocoImagem | BlocoInstrucao | BlocoObservacao;
+export type BlocoVideo = {
+  tipo: "video";
+  id: string;
+  url: string;
+  titulo: string;
+  descricao: string;
+};
+export type Bloco =
+  | BlocoTexto
+  | BlocoContexto
+  | BlocoImagem
+  | BlocoInstrucao
+  | BlocoObservacao
+  | BlocoVideo;
 
 export type Guia = {
   id: string;
@@ -52,3 +73,14 @@ export type Guia = {
   updatedAt: string;
   updatedBy: string;
 };
+
+/** Fixed instruction header texts shown at the top of certain blocks. */
+export const CONTEXTO_HEADER =
+  "Contexto: Este parágrafo de contexto explica a situação que deve ser dada a resposta do bloco seguinte, mas ela não será dita ao usuário:";
+export const OBSERVACAO_HEADER =
+  "Observação: Esta observação é uma informação importante que deve ser levada em consideração ao usuário acompanhar a resposta ao usuário:";
+export const INSTRUCAO_HEADER =
+  "Instrução: Siga as etapas abaixo para orientar corretamente o usuário:";
+
+/** Max hierarchy depth in the sidebar tree (root=0, child=1, grandchild=2). */
+export const MAX_DEPTH = 2;
