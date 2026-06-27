@@ -1,5 +1,6 @@
 import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
 import type { Bloco, Categoria, Guia } from "./faq-types";
+import { CATEGORIA_COR_PADRAO } from "./faq-types";
 import { CATEGORIAS, SEED_GUIAS } from "./faq-seed";
 
 type DateFilter = "todos" | "hoje" | "7d" | "30d" | "90d" | "custom";
@@ -10,10 +11,18 @@ type FaqContextValue = {
   selectedId: string;
   setSelectedId: (id: string) => void;
   selected: Guia | null;
+  /** Texto da busca dentro do conteúdo do documento (Ctrl+F). */
   search: string;
   setSearch: (v: string) => void;
-  categoriaFiltro: string;
-  setCategoriaFiltro: (v: string) => void;
+  /** Índice da ocorrência ativa (0-based). */
+  searchIndex: number;
+  setSearchIndex: (n: number) => void;
+  searchTotal: number;
+  setSearchTotal: (n: number) => void;
+  /** Filtro de categorias multi-seleção. */
+  categoriasFiltro: string[];
+  toggleCategoriaFiltro: (id: string) => void;
+  clearCategoriasFiltro: () => void;
   dateFiltro: DateFilter;
   setDateFiltro: (v: DateFilter) => void;
   addGuia: (parentId: string | null, nome: string) => void;
@@ -22,7 +31,7 @@ type FaqContextValue = {
   depthOf: (id: string) => number;
   updateBlocos: (guiaId: string, blocos: Bloco[]) => void;
   moveBloco: (guiaId: string, fromIndex: number, toIndex: number) => void;
-  addCategoria: (nome: string) => Categoria;
+  addCategoria: (nome: string, cor?: string) => Categoria;
   setGuiaCategorias: (guiaId: string, categorias: Categoria[]) => void;
 };
 
@@ -67,11 +76,18 @@ export function FaqProvider({ children }: { children: ReactNode }) {
   const [guias, setGuias] = useState<Guia[]>(SEED_GUIAS);
   const [categorias, setCategorias] = useState<Categoria[]>(CATEGORIAS);
   const [selectedId, setSelectedId] = useState<string>("g1-1");
-  const [search, setSearch] = useState("");
-  const [categoriaFiltro, setCategoriaFiltro] = useState<string>("todas");
+  const [search, setSearchRaw] = useState("");
+  const [searchIndex, setSearchIndex] = useState(0);
+  const [searchTotal, setSearchTotal] = useState(0);
+  const [categoriasFiltro, setCategoriasFiltro] = useState<string[]>([]);
   const [dateFiltro, setDateFiltro] = useState<DateFilter>("todos");
 
   const selected = useMemo(() => findFlat(guias, selectedId), [guias, selectedId]);
+
+  const setSearch = (v: string) => {
+    setSearchRaw(v);
+    setSearchIndex(0);
+  };
 
   const value: FaqContextValue = {
     guias,
@@ -81,8 +97,16 @@ export function FaqProvider({ children }: { children: ReactNode }) {
     selected,
     search,
     setSearch,
-    categoriaFiltro,
-    setCategoriaFiltro,
+    searchIndex,
+    setSearchIndex,
+    searchTotal,
+    setSearchTotal,
+    categoriasFiltro,
+    toggleCategoriaFiltro: (id) =>
+      setCategoriasFiltro((prev) =>
+        prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+      ),
+    clearCategoriasFiltro: () => setCategoriasFiltro([]),
     dateFiltro,
     setDateFiltro,
     addGuia: (parentId, nome) => {
@@ -132,8 +156,12 @@ export function FaqProvider({ children }: { children: ReactNode }) {
           };
         }),
       ),
-    addCategoria: (nome) => {
-      const nova: Categoria = { id: `c-${Date.now()}`, nome };
+    addCategoria: (nome, cor) => {
+      const nova: Categoria = {
+        id: `c-${Date.now()}`,
+        nome,
+        cor: cor || CATEGORIA_COR_PADRAO,
+      };
       setCategorias((prev) => [...prev, nova]);
       return nova;
     },
@@ -150,6 +178,13 @@ export function useFaq() {
   const ctx = useContext(FaqCtx);
   if (!ctx) throw new Error("useFaq must be used inside FaqProvider");
   return ctx;
+}
+
+/** True se o guia ou algum descendente tem ao menos uma das categorias. */
+export function guiaMatchAnyCategoria(g: Guia, ids: string[]): boolean {
+  if (ids.length === 0) return true;
+  if (g.categorias.some((c) => ids.includes(c.id))) return true;
+  return g.filhos.some((f) => guiaMatchAnyCategoria(f, ids));
 }
 
 /** Concatenate all searchable text of a guia (used by global text search). */
