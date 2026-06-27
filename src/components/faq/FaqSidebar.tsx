@@ -29,6 +29,8 @@ import { MAX_DEPTH } from "@/lib/faq-types";
 import { cn } from "@/lib/utils";
 import { VincularCategoriaDialog } from "./VincularCategoriaDialog";
 import { AdicionarCategoriaDialog } from "./AdicionarCategoriaDialog";
+import { FiltroCategoriaDropdown } from "./FiltroCategoriaDropdown";
+import { CategoriaDots } from "./CategoriaDots";
 
 const LEVEL_LABEL = ["Tema", "Guia", "Assunto"] as const;
 const CHILD_LABEL = ["Guia", "Assunto", ""] as const;
