@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import type { Bloco, BlocoInstrucao as BlocoInstrucaoT } from "@/lib/faq-types";
 import {
   CONTEXTO_HEADER,
@@ -7,6 +8,9 @@ import {
 import { MARKER_BY_KIND, ordinal } from "@/lib/faq-markers";
 import { ArrowSVG, RectShape } from "./blocos/BlocoImagem";
 import { toEmbedSrc } from "./blocos/BlocoVideo";
+import { useFaq } from "@/lib/faq-store";
+import { useSearchHighlight } from "@/hooks/useSearchHighlight";
+import { SearchScrollMarkers } from "./SearchScrollMarkers";
 
 function instrucaoItens(b: BlocoInstrucaoT) {
   if (b.itens && b.itens.length > 0) return b.itens;
@@ -21,6 +25,11 @@ function instrucaoItens(b: BlocoInstrucaoT) {
 }
 
 export function DocumentoSalvo({ blocos }: { blocos: Bloco[] }) {
+  const { search, searchIndex, setSearchTotal } = useFaq();
+  const ref = useRef<HTMLDivElement>(null);
+
+  useSearchHighlight(ref, search, searchIndex, setSearchTotal, blocos);
+
   if (blocos.length === 0) {
     return (
       <p className="text-sm italic text-muted-foreground">
@@ -30,7 +39,10 @@ export function DocumentoSalvo({ blocos }: { blocos: Bloco[] }) {
   }
 
   return (
-    <article className="space-y-4 text-[15px] leading-relaxed text-foreground">
+    <div ref={ref} className="relative">
+      <SearchScrollMarkers contentRef={ref} />
+      <article className="space-y-4 pr-6 text-[15px] leading-relaxed text-foreground">
+
       {blocos.map((b) => {
         if (b.tipo === "texto") {
           return b.conteudo.split(/\n{2,}/).map((p, i) => (
