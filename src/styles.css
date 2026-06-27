@@ -144,4 +144,18 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
   }
+
+  /* In-document search highlights (Ctrl+F like) */
+  mark.faq-search-hit {
+    background-color: rgba(253, 224, 71, 0.7); /* yellow-300/70 */
+    color: inherit;
+    border-radius: 2px;
+    padding: 0 1px;
+  }
+  mark.faq-search-hit.faq-search-hit-active {
+    background-color: rgb(245, 158, 11); /* amber-500 */
+    color: white;
+    box-shadow: 0 0 0 2px rgb(217, 119, 6);
+  }
 }
+

@@ -1,4 +1,19 @@
-export type Categoria = { id: string; nome: string };
+export type Categoria = { id: string; nome: string; cor: string };
+
+/** Paleta fixa de cores disponíveis para categorias. */
+export const CATEGORIA_CORES = [
+  { nome: "Azul", valor: "#2563eb" },
+  { nome: "Verde", valor: "#16a34a" },
+  { nome: "Roxo", valor: "#7c3aed" },
+  { nome: "Amarelo", valor: "#eab308" },
+  { nome: "Laranja", valor: "#ea580c" },
+  { nome: "Vermelho", valor: "#dc2626" },
+  { nome: "Rosa", valor: "#db2777" },
+  { nome: "Cinza", valor: "#64748b" },
+  { nome: "Marrom", valor: "#854d0e" },
+] as const;
+
+export const CATEGORIA_COR_PADRAO = "#64748b";
 
 export type MarkerKind =
   | "clique"

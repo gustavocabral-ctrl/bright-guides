@@ -1,11 +1,11 @@
 import type { Guia, Categoria } from "./faq-types";
 
 export const CATEGORIAS: Categoria[] = [
-  { id: "c1", nome: "Operacional" },
-  { id: "c2", nome: "Financeiro" },
-  { id: "c3", nome: "Administrativo" },
-  { id: "c4", nome: "Configuração" },
-  { id: "c5", nome: "Cadastro" },
+  { id: "c1", nome: "Operacional", cor: "#2563eb" },
+  { id: "c2", nome: "Financeiro", cor: "#16a34a" },
+  { id: "c3", nome: "Administrativo", cor: "#7c3aed" },
+  { id: "c4", nome: "Configuração", cor: "#ea580c" },
+  { id: "c5", nome: "Cadastro", cor: "#db2777" },
 ];
 
 // Fixed seed timestamp to avoid SSR hydration mismatch

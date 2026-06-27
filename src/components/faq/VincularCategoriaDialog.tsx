@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Plus, Search, X } from "lucide-react";
+import { Plus, Search, X, Check } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -9,8 +9,11 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useFaq } from "@/lib/faq-store";
+import { CATEGORIA_CORES, CATEGORIA_COR_PADRAO } from "@/lib/faq-types";
+import { cn } from "@/lib/utils";
 
 export function VincularCategoriaDialog({
   open,
@@ -30,14 +33,15 @@ export function VincularCategoriaDialog({
   );
   const [criando, setCriando] = useState(false);
   const [novoNome, setNovoNome] = useState("");
+  const [novaCor, setNovaCor] = useState<string>(CATEGORIA_COR_PADRAO);
 
-  // Sync when reopening
   const onOpenChangeWrapped = (v: boolean) => {
     if (v) {
       setSelecionadas(new Set(selecionadasIniciais));
       setBusca("");
       setCriando(false);
       setNovoNome("");
+      setNovaCor(CATEGORIA_COR_PADRAO);
     }
     onOpenChange(v);
   };
@@ -62,10 +66,11 @@ export function VincularCategoriaDialog({
   const handleSalvarNova = () => {
     const nome = novoNome.trim();
     if (!nome) return;
-    const nova = addCategoria(nome);
+    const nova = addCategoria(nome, novaCor);
     setSelecionadas((prev) => new Set(prev).add(nova.id));
     setCriando(false);
     setNovoNome("");
+    setNovaCor(CATEGORIA_COR_PADRAO);
   };
 
   const handleVincular = () => {
@@ -106,6 +111,10 @@ export function VincularCategoriaDialog({
                     className="flex cursor-pointer items-center gap-3 rounded-md px-3 py-2 text-sm hover:bg-background"
                   >
                     <Checkbox checked={checked} onCheckedChange={() => toggle(c.id)} />
+                    <span
+                      className="h-2.5 w-2.5 shrink-0 rounded-full"
+                      style={{ backgroundColor: c.cor }}
+                    />
                     <span className="flex-1">{c.nome}</span>
                   </label>
                 );
@@ -115,7 +124,7 @@ export function VincularCategoriaDialog({
 
           {criando ? (
             <div className="space-y-2 rounded-lg border border-dashed border-primary/40 bg-[var(--primary-soft)]/40 p-3">
-              <label className="text-xs font-medium">Nome da categoria</label>
+              <Label className="text-xs font-medium">Nome da categoria</Label>
               <Input
                 autoFocus
                 value={novoNome}
@@ -125,6 +134,28 @@ export function VincularCategoriaDialog({
                   if (e.key === "Enter") handleSalvarNova();
                 }}
               />
+              <Label className="text-xs font-medium">Cor</Label>
+              <div className="flex flex-wrap gap-2">
+                {CATEGORIA_CORES.map((c) => {
+                  const sel = novaCor === c.valor;
+                  return (
+                    <button
+                      key={c.valor}
+                      type="button"
+                      aria-label={c.nome}
+                      title={c.nome}
+                      onClick={() => setNovaCor(c.valor)}
+                      className={cn(
+                        "flex h-6 w-6 items-center justify-center rounded-full border-2",
+                        sel ? "border-foreground/70" : "border-transparent",
+                      )}
+                      style={{ backgroundColor: c.valor }}
+                    >
+                      {sel && <Check className="h-3 w-3 text-white" />}
+                    </button>
+                  );
+                })}
+              </div>
               <div className="flex justify-end gap-2 pt-1">
                 <Button
                   variant="ghost"
@@ -148,7 +179,7 @@ export function VincularCategoriaDialog({
               className="w-full justify-center border-dashed"
               onClick={() => setCriando(true)}
             >
-              <Plus className="mr-1.5 h-4 w-4" /> Incluir categoria
+              <Plus className="mr-1.5 h-4 w-4" /> Adicionar nova categoria
             </Button>
           )}
         </div>
@@ -157,7 +188,7 @@ export function VincularCategoriaDialog({
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
             Cancelar
           </Button>
-          <Button onClick={handleVincular}>Vincular categorias</Button>
+          <Button onClick={handleVincular}>Salvar vínculo</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
