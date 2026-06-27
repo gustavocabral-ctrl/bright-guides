@@ -157,6 +157,7 @@ function TreeNode({
             >
               {guia.nome}
             </button>
+            <CategoriaDots categorias={guia.categorias} />
             {isActive && (
               <span className="absolute left-0 top-1 bottom-1 w-0.5 rounded-r bg-primary" />
             )}
