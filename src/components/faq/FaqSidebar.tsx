@@ -241,14 +241,7 @@ function TreeNode({
 }
 
 export function FaqSidebar() {
-  const {
-    guias,
-    addGuia,
-    categorias,
-    categoriasFiltro,
-    toggleCategoriaFiltro,
-    clearCategoriasFiltro,
-  } = useFaq();
+  const { guias, addGuia, categoriasFiltro } = useFaq();
   const [term, setTerm] = useState("");
   const [catGuiaId, setCatGuiaId] = useState<string | null>(null);
   const [addCatOpen, setAddCatOpen] = useState(false);
@@ -307,6 +300,7 @@ export function FaqSidebar() {
             className="h-8 rounded-md pl-8 text-xs"
           />
         </div>
+        <FiltroCategoriaDropdown />
         <Button
           variant="outline"
           size="sm"
@@ -317,49 +311,7 @@ export function FaqSidebar() {
         </Button>
       </div>
 
-      <div className="border-b border-border px-3 py-2">
-        <div className="mb-1.5 flex items-center justify-between">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-            Filtrar por categoria
-          </p>
-          {filtersActive && (
-            <button
-              type="button"
-              onClick={clearCategoriasFiltro}
-              className="text-[11px] text-primary hover:underline"
-            >
-              Limpar
-            </button>
-          )}
-        </div>
-        {categorias.length === 0 ? (
-          <p className="py-1 text-[11px] italic text-muted-foreground">
-            Nenhuma categoria cadastrada.
-          </p>
-        ) : (
-          <div className="max-h-40 space-y-0.5 overflow-y-auto pr-1">
-            {categorias.map((c) => {
-              const checked = categoriasFiltro.includes(c.id);
-              return (
-                <label
-                  key={c.id}
-                  className="flex cursor-pointer items-center gap-2 rounded px-1 py-1 text-xs hover:bg-muted"
-                >
-                  <Checkbox
-                    checked={checked}
-                    onCheckedChange={() => toggleCategoriaFiltro(c.id)}
-                  />
-                  <span
-                    className="h-2.5 w-2.5 shrink-0 rounded-full"
-                    style={{ backgroundColor: c.cor }}
-                  />
-                  <span className="truncate">{c.nome}</span>
-                </label>
-              );
-            })}
-          </div>
-        )}
-      </div>
+
 
       <div className="flex-1 overflow-y-auto px-2 py-3">
         {filtered.length === 0 ? (
