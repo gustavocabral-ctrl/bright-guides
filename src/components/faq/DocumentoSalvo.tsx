@@ -168,8 +168,7 @@ export function DocumentoSalvo({ blocos }: { blocos: Bloco[] }) {
 
         return null;
       })}
-      </article>
-    </div>
+    </article>
   );
-
 }
+
