@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { BlocoImagem as BlocoImagemT, Marker, MarkerKind } from "@/lib/faq-types";
-import { MARKERS, MARKER_BY_KIND, ordinal } from "@/lib/faq-markers";
+import { MARKERS, MARKER_BY_KIND } from "@/lib/faq-markers";
 import { cn } from "@/lib/utils";
 
 const mid = () => `m-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
@@ -612,37 +612,31 @@ export function BlocoImagem({
           </p>
         ) : (
           <ol className="space-y-2">
-            {instrucoes.map((item, idx) => {
-              const marker = markers.find((m) => m.id === item.id);
-              const color = marker ? MARKER_BY_KIND[marker.kind].color : undefined;
-              return (
-                <li key={item.id} className="flex items-start gap-2">
-                  <div
-                    className="flex h-9 min-w-9 items-center justify-center rounded-full px-2 text-[11px] font-bold text-white"
-                    style={{ backgroundColor: color ?? "hsl(var(--muted-foreground))" }}
-                  >
-                    {ordinal(idx + 1)}
-                  </div>
-                  <Input
-                    value={item.texto}
-                    onChange={(e) => updateInstrucao(item.id, e.target.value)}
-                    placeholder="Descreva esta etapa…"
-                    className="flex-1"
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-9 w-9 text-muted-foreground hover:text-destructive"
-                    onClick={() => removeMarker(item.id)}
-                    aria-label="Remover"
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </li>
-              );
-            })}
+            {instrucoes.map((item, idx) => (
+              <li key={item.id} className="flex items-center gap-2">
+                <span className="w-8 shrink-0 text-right text-sm font-medium tabular-nums text-muted-foreground">
+                  {idx + 1}°
+                </span>
+                <Input
+                  value={item.texto}
+                  onChange={(e) => updateInstrucao(item.id, e.target.value)}
+                  placeholder="Descreva esta etapa…"
+                  className="flex-1"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9 text-muted-foreground hover:text-destructive"
+                  onClick={() => removeMarker(item.id)}
+                  aria-label="Remover"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </li>
+            ))}
           </ol>
+
         )}
         <p className="mt-2 text-[11px] text-muted-foreground">
           A ordem das formas inseridas na imagem define a ordem das instruções
