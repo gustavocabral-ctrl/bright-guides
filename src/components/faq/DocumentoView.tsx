@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Plus,
   Save,
@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useFaq } from "@/lib/faq-store";
 import type { Bloco } from "@/lib/faq-types";
+import { blocosPermitidos, nivelLabel } from "@/lib/faq-types";
 import { BlocoTexto } from "./blocos/BlocoTexto";
 import { BlocoContexto } from "./blocos/BlocoContexto";
 import { BlocoImagem } from "./blocos/BlocoImagem";
@@ -34,23 +35,57 @@ import { BlocoObservacao } from "./blocos/BlocoObservacao";
 import { BlocoVideo } from "./blocos/BlocoVideo";
 import { EmptyDocumento } from "./EmptyDocumento";
 import { DocumentoSalvo } from "./DocumentoSalvo";
+import { DocumentoConsolidado } from "./DocumentoConsolidado";
+import { SearchScrollMarkers } from "./SearchScrollMarkers";
+import { useSearchHighlight } from "@/hooks/useSearchHighlight";
 import { VincularCategoriaDialog } from "./VincularCategoriaDialog";
 
 const nid = () => `b-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 
+const BLOCO_META: Record<
+  Bloco["tipo"],
+  { label: string; icon: typeof FileText }
+> = {
+  texto: { label: "Texto", icon: FileText },
+  contexto: { label: "Contexto", icon: Quote },
+  imagem: { label: "Imagem", icon: ImageIcon },
+  video: { label: "Vídeo", icon: VideoIcon },
+  instrucao: { label: "Instrução", icon: Info },
+  observacao: { label: "Observação", icon: AlertCircle },
+};
+
 export function DocumentoView() {
-  const { selected, updateBlocos, moveBloco, renameGuia } = useFaq();
+  const {
+    selected,
+    updateBlocos,
+    moveBloco,
+    renameGuia,
+    depthOf,
+    search,
+    searchIndex,
+    setSearchTotal,
+  } = useFaq();
   const [titleEditing, setTitleEditing] = useState(false);
   const [editing, setEditing] = useState(false);
   const [catDialogOpen, setCatDialogOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const readRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => setMounted(true), []);
 
-  // Reset to view mode whenever the selected guia changes
   useEffect(() => {
     setEditing(false);
   }, [selected?.id]);
+
+  const nivel = selected ? depthOf(selected.id) : 2;
+  const tiposPermitidos = useMemo(() => blocosPermitidos(nivel), [nivel]);
+
+  // Re-run highlight whenever selection, edit mode, or search/index change.
+  const contentKey = useMemo(
+    () => ({ id: selected?.id, editing, nivel }),
+    [selected?.id, editing, nivel],
+  );
+  useSearchHighlight(readRef, search, searchIndex, setSearchTotal, contentKey);
 
   if (!selected) {
     return (
@@ -64,6 +99,7 @@ export function DocumentoView() {
   const isEmpty = blocos.length === 0;
 
   const addBloco = (tipo: Bloco["tipo"]) => {
+    if (!tiposPermitidos.includes(tipo)) return;
     const id = nid();
     let novo: Bloco;
     switch (tipo) {
@@ -112,6 +148,9 @@ export function DocumentoView() {
       <div className="rounded-2xl border border-border bg-card shadow-sm">
         {/* Header */}
         <div className="border-b border-border px-8 pb-6 pt-8">
+          <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-primary/80">
+            {nivelLabel(nivel)}
+          </p>
           {titleEditing ? (
             <input
               autoFocus
@@ -141,8 +180,17 @@ export function DocumentoView() {
                 <Badge
                   key={c.id}
                   variant="secondary"
-                  className="bg-[var(--primary-soft)] text-primary hover:bg-[var(--primary-soft)]"
+                  className="border"
+                  style={{
+                    color: c.cor,
+                    borderColor: `${c.cor}55`,
+                    backgroundColor: `${c.cor}14`,
+                  }}
                 >
+                  <span
+                    className="mr-1 h-1.5 w-1.5 rounded-full"
+                    style={{ backgroundColor: c.cor }}
+                  />
                   {c.nome}
                 </Badge>
               ))
@@ -168,7 +216,7 @@ export function DocumentoView() {
           {editing || isEmpty ? (
             <div className="space-y-4">
               {isEmpty ? (
-                <EmptyDocumento onAdd={() => addBloco("texto")} />
+                <EmptyDocumento onAdd={() => addBloco(tiposPermitidos[0])} />
               ) : (
                 blocos.map((b, idx) => (
                   <div key={b.id} className="group relative">
@@ -235,7 +283,14 @@ export function DocumentoView() {
               )}
             </div>
           ) : (
-            <DocumentoSalvo blocos={blocos} />
+            <div ref={readRef} className="relative pr-6">
+              <SearchScrollMarkers contentRef={readRef} />
+              {nivel < 2 ? (
+                <DocumentoConsolidado guia={selected} depth={nivel} />
+              ) : (
+                <DocumentoSalvo blocos={blocos} />
+              )}
+            </div>
           )}
         </div>
 
@@ -259,24 +314,15 @@ export function DocumentoView() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent>
-                    <DropdownMenuItem onClick={() => addBloco("texto")}>
-                      <FileText className="mr-2 h-4 w-4" /> Texto
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => addBloco("contexto")}>
-                      <Quote className="mr-2 h-4 w-4" /> Contexto
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => addBloco("imagem")}>
-                      <ImageIcon className="mr-2 h-4 w-4" /> Imagem
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => addBloco("video")}>
-                      <VideoIcon className="mr-2 h-4 w-4" /> Vídeo
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => addBloco("instrucao")}>
-                      <Info className="mr-2 h-4 w-4" /> Instrução
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => addBloco("observacao")}>
-                      <AlertCircle className="mr-2 h-4 w-4" /> Observação
-                    </DropdownMenuItem>
+                    {tiposPermitidos.map((t) => {
+                      const meta = BLOCO_META[t];
+                      const Icon = meta.icon;
+                      return (
+                        <DropdownMenuItem key={t} onClick={() => addBloco(t)}>
+                          <Icon className="mr-2 h-4 w-4" /> {meta.label}
+                        </DropdownMenuItem>
+                      );
+                    })}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </>
