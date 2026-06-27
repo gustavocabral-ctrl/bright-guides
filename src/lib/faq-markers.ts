@@ -87,5 +87,5 @@ export const MARKER_BY_KIND: Record<MarkerKind, MarkerMeta> = MARKERS.reduce(
 );
 
 export function ordinal(n: number): string {
-  return `${n}º`;
+  return `${n}°`;
 }
