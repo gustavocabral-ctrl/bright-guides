@@ -42,19 +42,19 @@ export function DocumentoSalvo({ blocos }: { blocos: Bloco[] }) {
 
         if (b.tipo === "contexto") {
           return (
-            <p key={b.id} className="whitespace-pre-wrap">
-              <span className="font-medium">{CONTEXTO_HEADER}</span>{" "}
-              {b.conteudo}
-            </p>
+            <div key={b.id} className="space-y-1">
+              <p className="italic text-foreground/80">{CONTEXTO_HEADER}</p>
+              <p className="whitespace-pre-wrap">{b.conteudo}</p>
+            </div>
           );
         }
 
         if (b.tipo === "observacao") {
           return (
-            <p key={b.id} className="whitespace-pre-wrap">
-              <span className="font-medium">{OBSERVACAO_HEADER}</span>{" "}
-              {b.conteudo}
-            </p>
+            <div key={b.id} className="space-y-1">
+              <p className="italic text-foreground/80">{OBSERVACAO_HEADER}</p>
+              <p className="whitespace-pre-wrap">{b.conteudo}</p>
+            </div>
           );
         }
 
