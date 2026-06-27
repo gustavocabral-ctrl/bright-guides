@@ -64,6 +64,7 @@ export function DocumentoView() {
     search,
     searchIndex,
     setSearchTotal,
+    resolveCategorias,
   } = useFaq();
   const [titleEditing, setTitleEditing] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -78,6 +79,7 @@ export function DocumentoView() {
   }, [selected?.id]);
 
   const nivel = selected ? depthOf(selected.id) : 2;
+  const selectedCategorias = selected ? resolveCategorias(selected) : [];
   const tiposPermitidos = useMemo(() => blocosPermitidos(nivel), [nivel]);
 
   // Re-run highlight whenever selection, edit mode, or search/index change.
@@ -175,8 +177,8 @@ export function DocumentoView() {
             </h1>
           )}
           <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-            {selected.categorias.length > 0 ? (
-              selected.categorias.map((c) => (
+            {selectedCategorias.length > 0 ? (
+              selectedCategorias.map((c) => (
                 <Badge
                   key={c.id}
                   variant="secondary"
@@ -349,7 +351,7 @@ export function DocumentoView() {
         open={catDialogOpen}
         onOpenChange={setCatDialogOpen}
         guiaId={selected.id}
-        selecionadasIniciais={selected.categorias.map((c) => c.id)}
+        selecionadasIniciais={selected.categoriaIds}
       />
     </div>
   );

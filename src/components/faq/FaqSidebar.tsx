@@ -71,12 +71,14 @@ function filterTreeByCategorias(guias: Guia[], cats: string[]): Guia[] {
 }
 
 function CategoriaChips({ guia }: { guia: Guia }) {
-  if (guia.categorias.length === 0) {
+  const { resolveCategorias } = useFaq();
+  const cats = resolveCategorias(guia);
+  if (cats.length === 0) {
     return <span className="text-xs italic text-muted-foreground">Sem categoria</span>;
   }
   return (
     <div className="flex flex-wrap gap-1.5">
-      {guia.categorias.map((c) => (
+      {cats.map((c) => (
         <span
           key={c.id}
           className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium"
@@ -105,7 +107,8 @@ function TreeNode({
   forceOpen: boolean;
   onOpenCategoria: (id: string) => void;
 }) {
-  const { selectedId, setSelectedId, addGuia, renameGuia, deleteGuia } = useFaq();
+  const { selectedId, setSelectedId, addGuia, renameGuia, deleteGuia, resolveCategorias } = useFaq();
+  const cats = resolveCategorias(guia);
   const [open, setOpen] = useState(true);
   const isOpen = forceOpen || open;
   const hasChildren = guia.filhos.length > 0;
@@ -157,7 +160,7 @@ function TreeNode({
             >
               {guia.nome}
             </button>
-            <CategoriaDots categorias={guia.categorias} />
+            <CategoriaDots categorias={cats} />
             {isActive && (
               <span className="absolute left-0 top-1 bottom-1 w-0.5 rounded-r bg-primary" />
             )}
@@ -338,7 +341,7 @@ export function FaqSidebar() {
           open={!!catGuiaId}
           onOpenChange={(v) => !v && setCatGuiaId(null)}
           guiaId={currentCat.id}
-          selecionadasIniciais={currentCat.categorias.map((c) => c.id)}
+          selecionadasIniciais={currentCat.categoriaIds}
         />
       )}
 

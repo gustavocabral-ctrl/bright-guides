@@ -1,4 +1,5 @@
-import type { Guia, Categoria } from "./faq-types";
+import type { Categoria, FaqNode } from "./faq-types";
+import { makeNode } from "./faq-tree";
 
 export const CATEGORIAS: Categoria[] = [
   { id: "c1", nome: "Operacional", cor: "#2563eb" },
@@ -11,21 +12,15 @@ export const CATEGORIAS: Categoria[] = [
 // Fixed seed timestamp to avoid SSR hydration mismatch
 const today = "2026-06-16T20:59:00.000Z";
 
-const leaf = (id: string, nome: string, cats: Categoria[] = []): Guia => ({
-  id,
-  nome,
-  categorias: cats,
-  filhos: [],
-  blocos: [],
-  updatedAt: today,
-  updatedBy: "Você",
-});
+const assunto = (id: string, nome: string, categoriaIds: string[] = []) =>
+  makeNode({ id, nome, tipo: "assunto", categoriaIds, updatedAt: today });
 
-export const SEED_GUIAS: Guia[] = [
+export const SEED_NODES: FaqNode[] = [
   {
     id: "g1",
+    tipo: "tema",
     nome: "FAQ Operacional",
-    categorias: [CATEGORIAS[0]],
+    categoriaIds: ["c1"],
     updatedAt: today,
     updatedBy: "Maria Silva",
     blocos: [
@@ -38,7 +33,11 @@ export const SEED_GUIAS: Guia[] = [
     ],
     filhos: [
       {
-        ...leaf("g1-1", "Cadastro de Estabelecimento", [CATEGORIAS[4]]),
+        id: "g1-1",
+        tipo: "guia",
+        nome: "Cadastro de Estabelecimento",
+        categoriaIds: ["c5"],
+        updatedAt: today,
         updatedBy: "João Souza",
         blocos: [
           {
@@ -59,42 +58,50 @@ export const SEED_GUIAS: Guia[] = [
           },
         ],
         filhos: [
-          leaf("g1-1-1", "Criar estabelecimento", [CATEGORIAS[4]]),
-          leaf("g1-1-2", "Editar estabelecimento", [CATEGORIAS[4]]),
-          leaf("g1-1-3", "Excluir estabelecimento", [CATEGORIAS[4]]),
+          assunto("g1-1-1", "Criar estabelecimento", ["c5"]),
+          assunto("g1-1-2", "Editar estabelecimento", ["c5"]),
+          assunto("g1-1-3", "Excluir estabelecimento", ["c5"]),
         ],
       },
-      leaf("g1-2", "Usuários", [CATEGORIAS[2]]),
-      leaf("g1-3", "Pagamentos", [CATEGORIAS[1]]),
+      makeNode({ id: "g1-2", nome: "Usuários", tipo: "guia", categoriaIds: ["c3"], updatedAt: today }),
+      makeNode({ id: "g1-3", nome: "Pagamentos", tipo: "guia", categoriaIds: ["c2"], updatedAt: today }),
     ],
   },
   {
     id: "g2",
+    tipo: "tema",
     nome: "Tabela de Estacionamento",
-    categorias: [CATEGORIAS[3]],
+    categoriaIds: ["c4"],
     updatedAt: today,
     updatedBy: "Você",
     blocos: [],
     filhos: [
       {
-        ...leaf("g2-1", "Tabela Simples"),
+        ...makeNode({ id: "g2-1", nome: "Tabela Simples", tipo: "guia", updatedAt: today }),
         filhos: [
-          leaf("g2-1-1", "Criar tabela simples"),
-          leaf("g2-1-2", "Configurar valores"),
-          leaf("g2-1-3", "Aplicar tabela"),
+          assunto("g2-1-1", "Criar tabela simples"),
+          assunto("g2-1-2", "Configurar valores"),
+          assunto("g2-1-3", "Aplicar tabela"),
         ],
       },
-      leaf("g2-2", "Tabela Pernoite"),
-      leaf("g2-3", "Tabela Especial"),
+      makeNode({ id: "g2-2", nome: "Tabela Pernoite", tipo: "guia", updatedAt: today }),
+      makeNode({ id: "g2-3", nome: "Tabela Especial", tipo: "guia", updatedAt: today }),
     ],
   },
   {
     id: "g3",
+    tipo: "tema",
     nome: "Convênio Estacionamento",
-    categorias: [CATEGORIAS[0]],
+    categoriaIds: ["c1"],
     updatedAt: today,
     updatedBy: "Você",
     blocos: [],
-    filhos: [leaf("g3-1", "Criar Convênio"), leaf("g3-2", "Vincular Cliente")],
+    filhos: [
+      makeNode({ id: "g3-1", nome: "Criar Convênio", tipo: "guia", updatedAt: today }),
+      makeNode({ id: "g3-2", nome: "Vincular Cliente", tipo: "guia", updatedAt: today }),
+    ],
   },
 ];
+
+/** Alias retrocompatível. */
+export const SEED_GUIAS = SEED_NODES;
