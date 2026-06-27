@@ -107,7 +107,8 @@ function TreeNode({
   forceOpen: boolean;
   onOpenCategoria: (id: string) => void;
 }) {
-  const { selectedId, setSelectedId, addGuia, renameGuia, deleteGuia } = useFaq();
+  const { selectedId, setSelectedId, addGuia, renameGuia, deleteGuia, resolveCategorias } = useFaq();
+  const cats = resolveCategorias(guia);
   const [open, setOpen] = useState(true);
   const isOpen = forceOpen || open;
   const hasChildren = guia.filhos.length > 0;
@@ -159,7 +160,7 @@ function TreeNode({
             >
               {guia.nome}
             </button>
-            <CategoriaDots categorias={guia.categorias} />
+            <CategoriaDots categorias={cats} />
             {isActive && (
               <span className="absolute left-0 top-1 bottom-1 w-0.5 rounded-r bg-primary" />
             )}
@@ -340,7 +341,7 @@ export function FaqSidebar() {
           open={!!catGuiaId}
           onOpenChange={(v) => !v && setCatGuiaId(null)}
           guiaId={currentCat.id}
-          selecionadasIniciais={currentCat.categorias.map((c) => c.id)}
+          selecionadasIniciais={currentCat.categoriaIds}
         />
       )}
 
