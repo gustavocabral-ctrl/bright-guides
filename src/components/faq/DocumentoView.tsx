@@ -175,8 +175,8 @@ export function DocumentoView() {
             </h1>
           )}
           <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-            {selected.categorias.length > 0 ? (
-              selected.categorias.map((c) => (
+            {selectedCategorias.length > 0 ? (
+              selectedCategorias.map((c) => (
                 <Badge
                   key={c.id}
                   variant="secondary"
@@ -349,7 +349,7 @@ export function DocumentoView() {
         open={catDialogOpen}
         onOpenChange={setCatDialogOpen}
         guiaId={selected.id}
-        selecionadasIniciais={selected.categorias.map((c) => c.id)}
+        selecionadasIniciais={selected.categoriaIds}
       />
     </div>
   );
