@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
+
 import { useFaq, guiaMatchAnyCategoria } from "@/lib/faq-store";
 import type { Guia } from "@/lib/faq-types";
 import { MAX_DEPTH } from "@/lib/faq-types";
