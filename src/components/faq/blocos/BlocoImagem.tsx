@@ -618,10 +618,10 @@ export function BlocoImagem({
               return (
                 <li key={item.id} className="flex items-start gap-2">
                   <div
-                    className="flex h-7 min-w-7 items-center justify-center rounded-full px-1 text-[11px] font-bold text-white"
+                    className="flex h-9 min-w-9 items-center justify-center rounded-full px-2 text-[11px] font-bold text-white"
                     style={{ backgroundColor: color ?? "hsl(var(--muted-foreground))" }}
                   >
-                    {idx + 1}
+                    {ordinal(idx + 1)}
                   </div>
                   <Input
                     value={item.texto}

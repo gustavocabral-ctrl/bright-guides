@@ -11,6 +11,10 @@ import {
   AlertCircle,
   Pencil,
   Tag,
+  Quote,
+  Video as VideoIcon,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -23,9 +27,11 @@ import {
 import { useFaq } from "@/lib/faq-store";
 import type { Bloco } from "@/lib/faq-types";
 import { BlocoTexto } from "./blocos/BlocoTexto";
+import { BlocoContexto } from "./blocos/BlocoContexto";
 import { BlocoImagem } from "./blocos/BlocoImagem";
 import { BlocoInstrucao } from "./blocos/BlocoInstrucao";
 import { BlocoObservacao } from "./blocos/BlocoObservacao";
+import { BlocoVideo } from "./blocos/BlocoVideo";
 import { EmptyDocumento } from "./EmptyDocumento";
 import { DocumentoSalvo } from "./DocumentoSalvo";
 import { VincularCategoriaDialog } from "./VincularCategoriaDialog";
@@ -33,7 +39,7 @@ import { VincularCategoriaDialog } from "./VincularCategoriaDialog";
 const nid = () => `b-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 
 export function DocumentoView() {
-  const { selected, updateBlocos, renameGuia } = useFaq();
+  const { selected, updateBlocos, moveBloco, renameGuia } = useFaq();
   const [titleEditing, setTitleEditing] = useState(false);
   const [editing, setEditing] = useState(false);
   const [catDialogOpen, setCatDialogOpen] = useState(false);
@@ -58,12 +64,25 @@ export function DocumentoView() {
   const isEmpty = blocos.length === 0;
 
   const addBloco = (tipo: Bloco["tipo"]) => {
-    const base = { id: nid() };
-    const novo: Bloco =
-      tipo === "imagem"
-        ? { ...base, tipo: "imagem", nome: "", interfaceTipo: "Aplicativo", instrucoes: "" }
-        : ({ ...base, tipo, conteudo: "" } as Bloco);
-    updateBlocos(selected.id, [...blocos, novo]);
+    const id = nid();
+    let novo: Bloco;
+    switch (tipo) {
+      case "imagem":
+        novo = { tipo: "imagem", id, nome: "", interfaceTipo: "Aplicativo", instrucoes: "" };
+        break;
+      case "instrucao":
+        novo = { tipo: "instrucao", id, itens: [] };
+        break;
+      case "video":
+        novo = { tipo: "video", id, url: "", titulo: "", descricao: "" };
+        break;
+      case "texto":
+      case "contexto":
+      case "observacao":
+        novo = { tipo, id, conteudo: "" };
+        break;
+    }
+    updateBlocos(selected.id, [...blocos, novo!]);
     setEditing(true);
   };
 
@@ -78,7 +97,6 @@ export function DocumentoView() {
     updateBlocos(selected.id, blocos.filter((b) => b.id !== id));
   };
 
-  // Render date only after mount to avoid SSR locale hydration mismatch
   const formatted = mounted
     ? new Date(selected.updatedAt).toLocaleString("pt-BR", {
         day: "2-digit",
@@ -152,18 +170,44 @@ export function DocumentoView() {
               {isEmpty ? (
                 <EmptyDocumento onAdd={() => addBloco("texto")} />
               ) : (
-                blocos.map((b) => (
+                blocos.map((b, idx) => (
                   <div key={b.id} className="group relative">
-                    <button
-                      type="button"
-                      onClick={() => removeBloco(b.id)}
-                      className="absolute -right-2 -top-2 z-10 hidden h-7 w-7 items-center justify-center rounded-full border border-border bg-card text-muted-foreground shadow-sm hover:text-destructive group-hover:flex"
-                      aria-label="Remover bloco"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
+                    <div className="absolute -right-2 -top-2 z-10 hidden items-center gap-1 group-hover:flex">
+                      <button
+                        type="button"
+                        onClick={() => moveBloco(selected.id, idx, idx - 1)}
+                        disabled={idx === 0}
+                        className="flex h-7 w-7 items-center justify-center rounded-full border border-border bg-card text-muted-foreground shadow-sm hover:text-primary disabled:opacity-40"
+                        aria-label="Mover para cima"
+                      >
+                        <ArrowUp className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => moveBloco(selected.id, idx, idx + 1)}
+                        disabled={idx === blocos.length - 1}
+                        className="flex h-7 w-7 items-center justify-center rounded-full border border-border bg-card text-muted-foreground shadow-sm hover:text-primary disabled:opacity-40"
+                        aria-label="Mover para baixo"
+                      >
+                        <ArrowDown className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => removeBloco(b.id)}
+                        className="flex h-7 w-7 items-center justify-center rounded-full border border-border bg-card text-muted-foreground shadow-sm hover:text-destructive"
+                        aria-label="Remover bloco"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
                     {b.tipo === "texto" && (
                       <BlocoTexto
+                        value={b.conteudo}
+                        onChange={(v) => patchBloco(b.id, { conteudo: v })}
+                      />
+                    )}
+                    {b.tipo === "contexto" && (
+                      <BlocoContexto
                         value={b.conteudo}
                         onChange={(v) => patchBloco(b.id, { conteudo: v })}
                       />
@@ -171,10 +215,13 @@ export function DocumentoView() {
                     {b.tipo === "imagem" && (
                       <BlocoImagem bloco={b} onChange={(patch) => patchBloco(b.id, patch)} />
                     )}
+                    {b.tipo === "video" && (
+                      <BlocoVideo bloco={b} onChange={(patch) => patchBloco(b.id, patch)} />
+                    )}
                     {b.tipo === "instrucao" && (
                       <BlocoInstrucao
-                        value={b.conteudo}
-                        onChange={(v) => patchBloco(b.id, { conteudo: v })}
+                        bloco={b}
+                        onChange={(patch) => patchBloco(b.id, patch)}
                       />
                     )}
                     {b.tipo === "observacao" && (
@@ -215,8 +262,14 @@ export function DocumentoView() {
                     <DropdownMenuItem onClick={() => addBloco("texto")}>
                       <FileText className="mr-2 h-4 w-4" /> Texto
                     </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => addBloco("contexto")}>
+                      <Quote className="mr-2 h-4 w-4" /> Contexto
+                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => addBloco("imagem")}>
                       <ImageIcon className="mr-2 h-4 w-4" /> Imagem
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => addBloco("video")}>
+                      <VideoIcon className="mr-2 h-4 w-4" /> Vídeo
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => addBloco("instrucao")}>
                       <Info className="mr-2 h-4 w-4" /> Instrução

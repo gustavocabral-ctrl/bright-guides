@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { ChevronRight, FileText, Folder, MoreHorizontal, Plus, Tag } from "lucide-react";
+import { useMemo, useState } from "react";
+import { ChevronRight, FileText, Folder, MoreHorizontal, Plus, Search, Tag } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -7,16 +7,49 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useFaq } from "@/lib/faq-store";
 import type { Guia } from "@/lib/faq-types";
+import { MAX_DEPTH } from "@/lib/faq-types";
 import { cn } from "@/lib/utils";
+import { VincularCategoriaDialog } from "./VincularCategoriaDialog";
 
-function TreeNode({ guia, depth }: { guia: Guia; depth: number }) {
+/** Returns a pruned tree containing only guias whose name (or descendant name)
+ *  matches the term — parents are kept so the matched leaf stays visible. */
+function filterTree(guias: Guia[], term: string): Guia[] {
+  if (!term) return guias;
+  const t = term.toLowerCase();
+  const walk = (list: Guia[]): Guia[] => {
+    const out: Guia[] = [];
+    for (const g of list) {
+      const filhos = walk(g.filhos);
+      if (g.nome.toLowerCase().includes(t) || filhos.length > 0) {
+        out.push({ ...g, filhos });
+      }
+    }
+    return out;
+  };
+  return walk(guias);
+}
+
+function TreeNode({
+  guia,
+  depth,
+  forceOpen,
+  onOpenCategoria,
+}: {
+  guia: Guia;
+  depth: number;
+  forceOpen: boolean;
+  onOpenCategoria: (id: string) => void;
+}) {
   const { selectedId, setSelectedId, addGuia, renameGuia, deleteGuia } = useFaq();
   const [open, setOpen] = useState(true);
+  const isOpen = forceOpen || open;
   const hasChildren = guia.filhos.length > 0;
   const isActive = selectedId === guia.id;
+  const canAddChild = depth < MAX_DEPTH;
 
   return (
     <div>
@@ -27,7 +60,7 @@ function TreeNode({ guia, depth }: { guia: Guia; depth: number }) {
             ? "bg-[var(--primary-soft)] text-primary font-medium"
             : "hover:bg-muted text-foreground/80",
         )}
-        style={{ paddingLeft: depth * 12 + 6 }}
+        style={{ paddingLeft: depth * 14 + 6 }}
       >
         <button
           type="button"
@@ -39,7 +72,7 @@ function TreeNode({ guia, depth }: { guia: Guia; depth: number }) {
           aria-label="Expandir"
         >
           <ChevronRight
-            className={cn("h-3.5 w-3.5 transition-transform", open && "rotate-90")}
+            className={cn("h-3.5 w-3.5 transition-transform", isOpen && "rotate-90")}
           />
         </button>
         {hasChildren ? (
@@ -68,7 +101,7 @@ function TreeNode({ guia, depth }: { guia: Guia; depth: number }) {
               <MoreHorizontal className="h-3.5 w-3.5" />
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-44">
+          <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuItem
               onClick={() => {
                 const nome = window.prompt("Novo nome da guia", guia.nome);
@@ -77,19 +110,23 @@ function TreeNode({ guia, depth }: { guia: Guia; depth: number }) {
             >
               Renomear
             </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => {
-                const nome = window.prompt("Nome da subguia");
-                if (nome) {
-                  addGuia(guia.id, nome);
-                  setOpen(true);
-                }
-              }}
-            >
-              Nova subguia
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Tag className="mr-2 h-3.5 w-3.5" /> Associar categoria
+            {canAddChild && (
+              <DropdownMenuItem
+                onClick={() => {
+                  const nome = window.prompt(
+                    depth === 0 ? "Nome da subguia" : "Nome do item",
+                  );
+                  if (nome) {
+                    addGuia(guia.id, nome);
+                    setOpen(true);
+                  }
+                }}
+              >
+                {depth === 0 ? "Nova subguia" : "Novo item"}
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuItem onClick={() => onOpenCategoria(guia.id)}>
+              <Tag className="mr-2 h-3.5 w-3.5" /> Vincular categoria
             </DropdownMenuItem>
             <DropdownMenuItem
               className="text-destructive focus:text-destructive"
@@ -102,10 +139,16 @@ function TreeNode({ guia, depth }: { guia: Guia; depth: number }) {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-      {open && hasChildren && (
+      {isOpen && hasChildren && (
         <div className="mt-0.5">
           {guia.filhos.map((f) => (
-            <TreeNode key={f.id} guia={f} depth={depth + 1} />
+            <TreeNode
+              key={f.id}
+              guia={f}
+              depth={depth + 1}
+              forceOpen={forceOpen}
+              onOpenCategoria={onOpenCategoria}
+            />
           ))}
         </div>
       )}
@@ -115,6 +158,22 @@ function TreeNode({ guia, depth }: { guia: Guia; depth: number }) {
 
 export function FaqSidebar() {
   const { guias, addGuia } = useFaq();
+  const [term, setTerm] = useState("");
+  const [catGuiaId, setCatGuiaId] = useState<string | null>(null);
+
+  const filtered = useMemo(() => filterTree(guias, term), [guias, term]);
+  const findGuia = (id: string): Guia | null => {
+    const walk = (list: Guia[]): Guia | null => {
+      for (const g of list) {
+        if (g.id === id) return g;
+        const f = walk(g.filhos);
+        if (f) return f;
+      }
+      return null;
+    };
+    return walk(guias);
+  };
+  const currentCat = catGuiaId ? findGuia(catGuiaId) : null;
 
   return (
     <aside className="hidden h-full w-72 shrink-0 flex-col border-r border-border bg-[var(--surface)] md:flex">
@@ -140,11 +199,43 @@ export function FaqSidebar() {
           <TooltipContent>Nova guia</TooltipContent>
         </Tooltip>
       </div>
-      <div className="flex-1 overflow-y-auto px-2 py-3">
-        {guias.map((g) => (
-          <TreeNode key={g.id} guia={g} depth={0} />
-        ))}
+      <div className="border-b border-border px-3 py-2">
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={term}
+            onChange={(e) => setTerm(e.target.value)}
+            placeholder="Buscar guia..."
+            className="h-8 rounded-md pl-8 text-xs"
+          />
+        </div>
       </div>
+      <div className="flex-1 overflow-y-auto px-2 py-3">
+        {filtered.length === 0 ? (
+          <p className="px-2 py-4 text-center text-xs italic text-muted-foreground">
+            Nenhuma guia encontrada.
+          </p>
+        ) : (
+          filtered.map((g) => (
+            <TreeNode
+              key={g.id}
+              guia={g}
+              depth={0}
+              forceOpen={!!term}
+              onOpenCategoria={setCatGuiaId}
+            />
+          ))
+        )}
+      </div>
+
+      {currentCat && (
+        <VincularCategoriaDialog
+          open={!!catGuiaId}
+          onOpenChange={(v) => !v && setCatGuiaId(null)}
+          guiaId={currentCat.id}
+          selecionadasIniciais={currentCat.categorias.map((c) => c.id)}
+        />
+      )}
     </aside>
   );
 }
