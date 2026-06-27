@@ -1,5 +1,14 @@
 import { useMemo, useState } from "react";
-import { ChevronRight, FileText, Folder, MoreHorizontal, Plus, Search, Tag } from "lucide-react";
+import {
+  BookOpen,
+  ChevronRight,
+  FileText,
+  Folder,
+  MoreHorizontal,
+  Plus,
+  Search,
+  Tag,
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,6 +23,17 @@ import type { Guia } from "@/lib/faq-types";
 import { MAX_DEPTH } from "@/lib/faq-types";
 import { cn } from "@/lib/utils";
 import { VincularCategoriaDialog } from "./VincularCategoriaDialog";
+
+/** Hierarchy labels by depth. */
+const LEVEL_LABEL = ["Tema", "Guia", "Assunto"] as const;
+/** What this depth creates as a child. */
+const CHILD_LABEL = ["Guia", "Assunto", ""] as const;
+
+function levelIcon(depth: number, className?: string) {
+  if (depth === 0) return <BookOpen className={cn("h-4 w-4 shrink-0 text-primary/80", className)} />;
+  if (depth === 1) return <Folder className={cn("h-4 w-4 shrink-0 text-primary/70", className)} />;
+  return <FileText className={cn("h-4 w-4 shrink-0 text-muted-foreground", className)} />;
+}
 
 /** Returns a pruned tree containing only guias whose name (or descendant name)
  *  matches the term — parents are kept so the matched leaf stays visible. */
@@ -50,6 +70,16 @@ function TreeNode({
   const hasChildren = guia.filhos.length > 0;
   const isActive = selectedId === guia.id;
   const canAddChild = depth < MAX_DEPTH;
+  const levelLabel = LEVEL_LABEL[depth] ?? "";
+  const childLabel = CHILD_LABEL[depth] ?? "";
+
+  const handleAddChild = () => {
+    const nome = window.prompt(`Nome do(a) novo(a) ${childLabel}`);
+    if (nome) {
+      addGuia(guia.id, nome);
+      setOpen(true);
+    }
+  };
 
   return (
     <div>
@@ -75,21 +105,32 @@ function TreeNode({
             className={cn("h-3.5 w-3.5 transition-transform", isOpen && "rotate-90")}
           />
         </button>
-        {hasChildren ? (
-          <Folder className="h-4 w-4 shrink-0 text-primary/70" />
-        ) : (
-          <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
-        )}
+        {levelIcon(depth)}
         <button
           type="button"
           onClick={() => setSelectedId(guia.id)}
           className="flex-1 truncate text-left"
-          title={guia.nome}
+          title={`${levelLabel}: ${guia.nome}`}
         >
           {guia.nome}
         </button>
         {isActive && (
           <span className="absolute left-0 top-1 bottom-1 w-0.5 rounded-r bg-primary" />
+        )}
+        {canAddChild && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                onClick={handleAddChild}
+                className="flex h-6 w-6 items-center justify-center rounded text-muted-foreground opacity-0 hover:bg-black/5 hover:text-primary group-hover:opacity-100"
+                aria-label={`Adicionar ${childLabel}`}
+              >
+                <Plus className="h-3.5 w-3.5" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>Adicionar {childLabel}</TooltipContent>
+          </Tooltip>
         )}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -104,25 +145,15 @@ function TreeNode({
           <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuItem
               onClick={() => {
-                const nome = window.prompt("Novo nome da guia", guia.nome);
+                const nome = window.prompt(`Renomear ${levelLabel}`, guia.nome);
                 if (nome) renameGuia(guia.id, nome);
               }}
             >
               Renomear
             </DropdownMenuItem>
             {canAddChild && (
-              <DropdownMenuItem
-                onClick={() => {
-                  const nome = window.prompt(
-                    depth === 0 ? "Nome da subguia" : "Nome do item",
-                  );
-                  if (nome) {
-                    addGuia(guia.id, nome);
-                    setOpen(true);
-                  }
-                }}
-              >
-                {depth === 0 ? "Nova subguia" : "Novo item"}
+              <DropdownMenuItem onClick={handleAddChild}>
+                <Plus className="mr-2 h-3.5 w-3.5" /> Nova(o) {childLabel}
               </DropdownMenuItem>
             )}
             <DropdownMenuItem onClick={() => onOpenCategoria(guia.id)}>
@@ -189,14 +220,14 @@ export function FaqSidebar() {
               variant="ghost"
               className="h-8 w-8"
               onClick={() => {
-                const nome = window.prompt("Nome da nova guia principal");
+                const nome = window.prompt("Nome do novo Tema");
                 if (nome) addGuia(null, nome);
               }}
             >
               <Plus className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>Nova guia</TooltipContent>
+          <TooltipContent>Novo Tema</TooltipContent>
         </Tooltip>
       </div>
       <div className="border-b border-border px-3 py-2">
@@ -213,7 +244,7 @@ export function FaqSidebar() {
       <div className="flex-1 overflow-y-auto px-2 py-3">
         {filtered.length === 0 ? (
           <p className="px-2 py-4 text-center text-xs italic text-muted-foreground">
-            Nenhuma guia encontrada.
+            Nenhum tema encontrado.
           </p>
         ) : (
           filtered.map((g) => (

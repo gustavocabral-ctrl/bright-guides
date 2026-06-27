@@ -1,86 +1,49 @@
-## Plano de ajustes — Documento FAQ
+# Ajustes incrementais — Documento FAQ
 
-Mantém todo o layout atual (Material UI, topbar, sidebar, documento central, botões e modal de categoria). Os pontos abaixo são apenas adições/refinos incrementais.
+## 1) Hierarquia do menu lateral (TEMA → GUIA → ASSUNTO)
 
-### 1. Tipos e store (`src/lib/faq-types.ts`, `src/lib/faq-store.tsx`)
+**`src/components/faq/FaqSidebar.tsx`**
+- Renomear semanticamente os 3 níveis pela profundidade:
+  - depth 0 → **TEMA** (ícone `BookOpen`)
+  - depth 1 → **GUIA** (ícone `Folder`)
+  - depth 2 → **ASSUNTO** (ícone `FileText`)
+- Substituir a lógica atual (`Folder` se tem filhos, senão `FileText`) por escolha de ícone baseada em `depth`.
+- Botão `+` inline visível ao hover ao lado de cada item (além do menu de 3 pontos), apenas quando `depth < MAX_DEPTH`:
+  - no TEMA → cria GUIA
+  - na GUIA → cria ASSUNTO
+- Botão `+` do topo continua criando TEMA. Tooltip atualizado: "Novo tema".
+- Labels do prompt e do menu de 3 pontos atualizados:
+  - depth 0 → "Nova guia"
+  - depth 1 → "Novo assunto"
+  - depth 2 → sem opção de criar filho
+- Cabeçalho lateral: manter "Guias do documento" / "FAQ Jump Tecnologia" (não alterar visual geral). Apenas o tooltip do botão `+` muda para "Novo tema".
+- Manter: expandir/recolher, recuo progressivo, destaque do selecionado, busca, renomear, excluir, vincular categoria.
 
-- Adicionar novos blocos:
-  - `BlocoContexto { tipo: "contexto", id, conteudo }`
-  - `BlocoVideo { tipo: "video", id, url, titulo, descricao }`
-  - `BlocoInstrucao` passa a ter `itens: InstrucaoItem[]` (lista numerada). Manter `conteudo` opcional para retrocompatibilidade ao migrar seeds.
-- Atualizar união `Bloco` e o seed em `faq-seed.ts` para os novos campos.
-- Store ganha:
-  - `depthOf(id)` helper (limitar criação ao máximo 3 níveis).
-  - `moveBloco(guiaId, fromIndex, toIndex)`.
-  - `DateFilter` ganha valor `"90d"`.
+**`src/lib/faq-types.ts`** — nenhuma mudança de tipo (a hierarquia já é genérica via `filhos` + `MAX_DEPTH = 2`). Apenas a UI ganha rótulos TEMA/GUIA/ASSUNTO.
 
-### 2. Sidebar — 3 níveis, busca e ações por nível (`FaqSidebar.tsx`)
+## 2) Numeração ordenada nas instruções da imagem
 
-- Adicionar `Input` "Buscar guia..." no topo (estado local, não usa `search` global).
-- Filtrar a árvore mantendo os pais visíveis/expandidos quando um descendente bate o termo.
-- `TreeNode` recebe `depth`. Quando `depth >= 2` (3º nível), o menu de ações esconde a opção "Nova subguia".
-- Menu de ações por nível: Renomear, Nova subguia (até depth 2), Vincular categoria (abre `VincularCategoriaDialog`), Excluir.
-- Indentação progressiva já existe; manter destaque azul (`primary-soft`) e cheveron de expandir.
-- Seed (`faq-seed.ts`) ganha um exemplo com 3 níveis para validação manual.
+**`src/components/faq/blocos/BlocoImagem.tsx`**
+- A numeração já é derivada do índice (`instrucoesItens.map((_, i) => ...)`), garantindo reordenação automática ao remover.
+- Ajustar o badge para o formato visual pedido — `1°`, `2°`, `3°`... — em destaque ao lado do campo da instrução (chip arredondado alinhado verticalmente ao topo do textarea).
+- Manter botões "Gerar instruções com IA", "Adicionar instrução" e a vinculação 1:1 com os marcadores da imagem.
 
-### 3. Topbar — placeholder e filtro de data (`FaqTopbar.tsx`)
+## 3) Layout dos blocos Contexto e Observação
 
-- Placeholder da busca: `Buscar no texto do FAQ`.
-- Select de data renomeado para "Data de ajuste" com opções: Qualquer data, Atualizados hoje, Atualizados nos últimos 7/30/90 dias, Personalizado.
-- Botão Filtrar permanece (já compõe os três filtros).
-- A busca global continua agindo sobre conteúdo dos blocos (texto, contexto, instruções, observação, legendas, descrição de vídeo). Implementar matcher novo em `faq-store.tsx` usado pela sidebar/chat de listagem existente.
+**`src/components/faq/blocos/BlocoContexto.tsx` e `BlocoObservacao.tsx`**
+- O texto fixo (`CONTEXTO_HEADER` / `OBSERVACAO_HEADER`) passa a aparecer **sozinho na linha de cima**, em **itálico**, **sem negrito** (`italic font-normal`), como um parágrafo cabeçalho.
+- O campo editável fica claramente **abaixo**, como parágrafo independente (Textarea separado, com leve espaçamento `mt-2`).
+- Manter a faixa colorida lateral e o ícone do bloco (visual Material UI atual), apenas reorganizando o conteúdo interno em duas linhas (cabeçalho em cima, conteúdo embaixo).
+- Remover qualquer aparência de "título inline + conteúdo na mesma linha".
 
-### 4. Dropdown "Adicionar bloco" (`DocumentoView.tsx`)
+**`src/components/faq/DocumentoSalvo.tsx`**
+- Garantir que, no documento salvo (texto contínuo), o cabeçalho fixo apareça em itálico, em uma linha, e o conteúdo do usuário em parágrafo separado abaixo — sem alterar o restante do fluxo já existente.
 
-Ordem: Texto · Contexto · Imagem · Vídeo · Instrução · Observação. Ícones lucide simples (`FileText`, `Quote`, `Image`, `Video`, `ListOrdered`, `AlertCircle`).
+## 4) Preservação
 
-### 5. Reordenar blocos (`DocumentoView.tsx`)
+Sem alterações em: topbar/busca/filtros, Chat FAQ / Documento FAQ, dropdown Adicionar bloco, demais blocos (Texto, Vídeo, Instrução), botões Editar/Publicar/Salvar, modal de categorias, store, seed, rotas.
 
-- Botões discretos ▲ ▼ no canto do bloco em modo edição (aparecem no hover, ao lado do botão remover). Chamam `moveBloco` no store.
-- Sem dependência nova; nada de drag-and-drop para evitar refator.
+## Arquivos
 
-### 6. Blocos com cabeçalho fixo
-
-Cada bloco em edição renderiza um título fixo não editável + textarea para o conteúdo do usuário:
-
-- `BlocoContexto.tsx` (novo): "Contexto: Este parágrafo de contexto explica a situação..."
-- `BlocoObservacao.tsx` (ajuste): "Observação: Esta observação é uma informação importante..."
-- `BlocoInstrucao.tsx` (refeito): "Instrução: Siga as etapas abaixo para orientar corretamente o usuário:" + lista de itens com numeração `1º, 2º, 3º...` à esquerda, textarea por item, botão remover e botão "Adicionar instrução". Renumera automaticamente.
-
-### 7. Bloco de Imagem — numeração visível nas instruções (`BlocoImagem.tsx`)
-
-- Cada campo em "Instruções da imagem" ganha o badge `1º/2º/3º...` ao lado do input.
-- Ao adicionar/remover, renumerar (ordem continua amarrada à ordem dos marcadores).
-- Mantém "Gerar instruções com IA" e "Adicionar instrução".
-
-### 8. Novo bloco de Vídeo (`blocos/BlocoVideo.tsx`)
-
-- Campos: URL (aceita YouTube/Vimeo/embed), Título (input curto), Descrição (textarea).
-- Preview embedado em `<iframe>` ocupando a mesma largura/altura usada para a imagem (`max-h-[480px] w-full rounded-md`). Conversor simples para URLs do YouTube em `https://www.youtube.com/embed/{id}`.
-- Após salvar (DocumentoSalvo): iframe + legenda (`<figcaption>` em cinza itálico) com título e descrição, no mesmo padrão da legenda da imagem.
-
-### 9. Documento salvo como texto contínuo copiável (`DocumentoSalvo.tsx`)
-
-Reescrever o componente para emitir um `<article>` contínuo, sem cards/bordas/dividers entre blocos, com selectable text e sem ícones decorativos:
-
-- `texto` → parágrafos simples.
-- `contexto` → parágrafo iniciado por "Contexto: ..." (texto fixo) seguido do conteúdo do usuário, tudo no fluxo.
-- `instrucao` → "Instrução: Siga as etapas abaixo..." + lista numerada `1º Acesse...`, renderizada como linhas de texto (sem `<ol>` visual de formulário).
-- `observacao` → "Observação: ..." + conteúdo em parágrafo único.
-- `imagem` → `<img>` seguido por legenda em itálico cinza com Imagem/Interface/instruções numeradas.
-- `video` → `<iframe>` seguido por título + descrição em itálico cinza.
-- Espaçamento consistente entre blocos via `space-y-4` no `<article>`; nada de borders/shadows.
-- O wrapper externo em `DocumentoView` (rounded-2xl border bg-card) continua existindo só como moldura da página — o conteúdo interno do documento salvo é puro texto/imagens/vídeos, permitindo Ctrl+A e cópia em ordem lógica.
-
-### 10. Itens não tocados
-
-- Modal `VincularCategoriaDialog`, Chat FAQ, marcadores SVG/Rect e geração com IA da imagem, botões Editar/Publicar/Salvar — sem mudanças.
-
-### Arquivos afetados
-
-- Editar: `src/lib/faq-types.ts`, `src/lib/faq-store.tsx`, `src/lib/faq-seed.ts`, `src/components/faq/FaqSidebar.tsx`, `src/components/faq/FaqTopbar.tsx`, `src/components/faq/DocumentoView.tsx`, `src/components/faq/DocumentoSalvo.tsx`, `src/components/faq/blocos/BlocoInstrucao.tsx`, `src/components/faq/blocos/BlocoObservacao.tsx`, `src/components/faq/blocos/BlocoImagem.tsx`.
-- Criar: `src/components/faq/blocos/BlocoContexto.tsx`, `src/components/faq/blocos/BlocoVideo.tsx`.
-
-### Validação manual coberta
-
-Criar guias até 3 níveis, busca lateral expandindo pais, busca global por texto, filtros combinados, adicionar todos os 6 tipos de bloco, instruções numeradas (bloco e imagem), reorder com ▲▼, salvar e Ctrl+A copiar o texto contínuo.
+- Editar: `FaqSidebar.tsx`, `BlocoImagem.tsx`, `BlocoContexto.tsx`, `BlocoObservacao.tsx`, `DocumentoSalvo.tsx`.
+- Sem novos arquivos. Sem mudanças em tipos ou store.
