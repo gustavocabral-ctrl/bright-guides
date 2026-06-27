@@ -15,18 +15,22 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { useFaq } from "@/lib/faq-store";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useFaq, guiaMatchAnyCategoria } from "@/lib/faq-store";
 import type { Guia } from "@/lib/faq-types";
 import { MAX_DEPTH } from "@/lib/faq-types";
 import { cn } from "@/lib/utils";
 import { VincularCategoriaDialog } from "./VincularCategoriaDialog";
+import { AdicionarCategoriaDialog } from "./AdicionarCategoriaDialog";
 
-/** Hierarchy labels by depth. */
 const LEVEL_LABEL = ["Tema", "Guia", "Assunto"] as const;
-/** What this depth creates as a child. */
 const CHILD_LABEL = ["Guia", "Assunto", ""] as const;
 
 function levelIcon(depth: number, className?: string) {
@@ -35,9 +39,7 @@ function levelIcon(depth: number, className?: string) {
   return <FileText className={cn("h-4 w-4 shrink-0 text-muted-foreground", className)} />;
 }
 
-/** Returns a pruned tree containing only guias whose name (or descendant name)
- *  matches the term — parents are kept so the matched leaf stays visible. */
-function filterTree(guias: Guia[], term: string): Guia[] {
+function filterTreeByTerm(guias: Guia[], term: string): Guia[] {
   if (!term) return guias;
   const t = term.toLowerCase();
   const walk = (list: Guia[]): Guia[] => {
@@ -51,6 +53,43 @@ function filterTree(guias: Guia[], term: string): Guia[] {
     return out;
   };
   return walk(guias);
+}
+
+function filterTreeByCategorias(guias: Guia[], cats: string[]): Guia[] {
+  if (cats.length === 0) return guias;
+  const walk = (list: Guia[]): Guia[] => {
+    const out: Guia[] = [];
+    for (const g of list) {
+      if (!guiaMatchAnyCategoria(g, cats)) continue;
+      out.push({ ...g, filhos: walk(g.filhos) });
+    }
+    return out;
+  };
+  return walk(guias);
+}
+
+function CategoriaChips({ guia }: { guia: Guia }) {
+  if (guia.categorias.length === 0) {
+    return <span className="text-xs italic text-muted-foreground">Sem categoria</span>;
+  }
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {guia.categorias.map((c) => (
+        <span
+          key={c.id}
+          className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium"
+          style={{
+            color: c.cor,
+            borderColor: `${c.cor}55`,
+            backgroundColor: `${c.cor}14`,
+          }}
+        >
+          <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: c.cor }} />
+          {c.nome}
+        </span>
+      ))}
+    </div>
+  );
 }
 
 function TreeNode({
@@ -83,93 +122,104 @@ function TreeNode({
 
   return (
     <div>
-      <div
-        className={cn(
-          "group relative flex items-center gap-1 rounded-md px-1.5 py-1.5 text-sm transition-colors",
-          isActive
-            ? "bg-[var(--primary-soft)] text-primary font-medium"
-            : "hover:bg-muted text-foreground/80",
-        )}
-        style={{ paddingLeft: depth * 14 + 6 }}
-      >
-        <button
-          type="button"
-          onClick={() => setOpen((v) => !v)}
-          className={cn(
-            "flex h-5 w-5 shrink-0 items-center justify-center rounded hover:bg-black/5",
-            !hasChildren && "invisible",
-          )}
-          aria-label="Expandir"
-        >
-          <ChevronRight
-            className={cn("h-3.5 w-3.5 transition-transform", isOpen && "rotate-90")}
-          />
-        </button>
-        {levelIcon(depth)}
-        <button
-          type="button"
-          onClick={() => setSelectedId(guia.id)}
-          className="flex-1 truncate text-left"
-          title={`${levelLabel}: ${guia.nome}`}
-        >
-          {guia.nome}
-        </button>
-        {isActive && (
-          <span className="absolute left-0 top-1 bottom-1 w-0.5 rounded-r bg-primary" />
-        )}
-        {canAddChild && (
-          <Tooltip>
-            <TooltipTrigger asChild>
+      <Tooltip delayDuration={350}>
+        <TooltipTrigger asChild>
+          <div
+            className={cn(
+              "group relative flex items-center gap-1 rounded-md px-1.5 py-1.5 text-sm transition-colors",
+              isActive
+                ? "bg-[var(--primary-soft)] text-primary font-medium"
+                : "hover:bg-muted text-foreground/80",
+            )}
+            style={{ paddingLeft: depth * 14 + 6 }}
+          >
+            <button
+              type="button"
+              onClick={() => setOpen((v) => !v)}
+              className={cn(
+                "flex h-5 w-5 shrink-0 items-center justify-center rounded hover:bg-black/5",
+                !hasChildren && "invisible",
+              )}
+              aria-label="Expandir"
+            >
+              <ChevronRight
+                className={cn("h-3.5 w-3.5 transition-transform", isOpen && "rotate-90")}
+              />
+            </button>
+            {levelIcon(depth)}
+            <button
+              type="button"
+              onClick={() => setSelectedId(guia.id)}
+              className="flex-1 truncate text-left"
+              title={`${levelLabel}: ${guia.nome}`}
+            >
+              {guia.nome}
+            </button>
+            {isActive && (
+              <span className="absolute left-0 top-1 bottom-1 w-0.5 rounded-r bg-primary" />
+            )}
+            {canAddChild && (
               <button
                 type="button"
                 onClick={handleAddChild}
                 className="flex h-6 w-6 items-center justify-center rounded text-muted-foreground opacity-0 hover:bg-black/5 hover:text-primary group-hover:opacity-100"
                 aria-label={`Adicionar ${childLabel}`}
+                title={`Adicionar ${childLabel}`}
               >
                 <Plus className="h-3.5 w-3.5" />
               </button>
-            </TooltipTrigger>
-            <TooltipContent>Adicionar {childLabel}</TooltipContent>
-          </Tooltip>
-        )}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button
-              type="button"
-              className="flex h-6 w-6 items-center justify-center rounded opacity-0 hover:bg-black/5 group-hover:opacity-100 data-[state=open]:opacity-100"
-              aria-label="Ações"
-            >
-              <MoreHorizontal className="h-3.5 w-3.5" />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuItem
-              onClick={() => {
-                const nome = window.prompt(`Renomear ${levelLabel}`, guia.nome);
-                if (nome) renameGuia(guia.id, nome);
-              }}
-            >
-              Renomear
-            </DropdownMenuItem>
-            {canAddChild && (
-              <DropdownMenuItem onClick={handleAddChild}>
-                <Plus className="mr-2 h-3.5 w-3.5" /> Nova(o) {childLabel}
-              </DropdownMenuItem>
             )}
-            <DropdownMenuItem onClick={() => onOpenCategoria(guia.id)}>
-              <Tag className="mr-2 h-3.5 w-3.5" /> Vincular categoria
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              className="text-destructive focus:text-destructive"
-              onClick={() => {
-                if (confirm(`Excluir "${guia.nome}"?`)) deleteGuia(guia.id);
-              }}
-            >
-              Excluir
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className="flex h-6 w-6 items-center justify-center rounded opacity-0 hover:bg-black/5 group-hover:opacity-100 data-[state=open]:opacity-100"
+                  aria-label="Ações"
+                >
+                  <MoreHorizontal className="h-3.5 w-3.5" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem
+                  onClick={() => {
+                    const nome = window.prompt(`Renomear ${levelLabel}`, guia.nome);
+                    if (nome) renameGuia(guia.id, nome);
+                  }}
+                >
+                  Renomear
+                </DropdownMenuItem>
+                {canAddChild && (
+                  <DropdownMenuItem onClick={handleAddChild}>
+                    <Plus className="mr-2 h-3.5 w-3.5" /> Nova(o) {childLabel}
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem onClick={() => onOpenCategoria(guia.id)}>
+                  <Tag className="mr-2 h-3.5 w-3.5" /> Vincular categoria
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="text-destructive focus:text-destructive"
+                  onClick={() => {
+                    if (confirm(`Excluir "${guia.nome}"?`)) deleteGuia(guia.id);
+                  }}
+                >
+                  Excluir
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </TooltipTrigger>
+        <TooltipContent side="right" align="start" className="max-w-[260px] bg-popover text-popover-foreground border">
+          <div className="space-y-1">
+            <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
+              {levelLabel}
+            </p>
+            <p className="text-xs font-medium">{guia.nome}</p>
+            <div className="pt-1">
+              <CategoriaChips guia={guia} />
+            </div>
+          </div>
+        </TooltipContent>
+      </Tooltip>
       {isOpen && hasChildren && (
         <div className="mt-0.5">
           {guia.filhos.map((f) => (
@@ -188,11 +238,23 @@ function TreeNode({
 }
 
 export function FaqSidebar() {
-  const { guias, addGuia } = useFaq();
+  const {
+    guias,
+    addGuia,
+    categorias,
+    categoriasFiltro,
+    toggleCategoriaFiltro,
+    clearCategoriasFiltro,
+  } = useFaq();
   const [term, setTerm] = useState("");
   const [catGuiaId, setCatGuiaId] = useState<string | null>(null);
+  const [addCatOpen, setAddCatOpen] = useState(false);
 
-  const filtered = useMemo(() => filterTree(guias, term), [guias, term]);
+  const filtered = useMemo(() => {
+    const byCat = filterTreeByCategorias(guias, categoriasFiltro);
+    return filterTreeByTerm(byCat, term);
+  }, [guias, term, categoriasFiltro]);
+
   const findGuia = (id: string): Guia | null => {
     const walk = (list: Guia[]): Guia | null => {
       for (const g of list) {
@@ -205,6 +267,7 @@ export function FaqSidebar() {
     return walk(guias);
   };
   const currentCat = catGuiaId ? findGuia(catGuiaId) : null;
+  const filtersActive = categoriasFiltro.length > 0;
 
   return (
     <aside className="hidden h-full w-72 shrink-0 flex-col border-r border-border bg-[var(--surface)] md:flex">
@@ -230,7 +293,8 @@ export function FaqSidebar() {
           <TooltipContent>Novo Tema</TooltipContent>
         </Tooltip>
       </div>
-      <div className="border-b border-border px-3 py-2">
+
+      <div className="space-y-2 border-b border-border px-3 py-2">
         <div className="relative">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -240,11 +304,66 @@ export function FaqSidebar() {
             className="h-8 rounded-md pl-8 text-xs"
           />
         </div>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-8 w-full justify-start text-xs"
+          onClick={() => setAddCatOpen(true)}
+        >
+          <Plus className="mr-1.5 h-3.5 w-3.5" /> Adicionar categoria
+        </Button>
       </div>
+
+      <div className="border-b border-border px-3 py-2">
+        <div className="mb-1.5 flex items-center justify-between">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+            Filtrar por categoria
+          </p>
+          {filtersActive && (
+            <button
+              type="button"
+              onClick={clearCategoriasFiltro}
+              className="text-[11px] text-primary hover:underline"
+            >
+              Limpar
+            </button>
+          )}
+        </div>
+        {categorias.length === 0 ? (
+          <p className="py-1 text-[11px] italic text-muted-foreground">
+            Nenhuma categoria cadastrada.
+          </p>
+        ) : (
+          <div className="max-h-40 space-y-0.5 overflow-y-auto pr-1">
+            {categorias.map((c) => {
+              const checked = categoriasFiltro.includes(c.id);
+              return (
+                <label
+                  key={c.id}
+                  className="flex cursor-pointer items-center gap-2 rounded px-1 py-1 text-xs hover:bg-muted"
+                >
+                  <Checkbox
+                    checked={checked}
+                    onCheckedChange={() => toggleCategoriaFiltro(c.id)}
+                  />
+                  <span
+                    className="h-2.5 w-2.5 shrink-0 rounded-full"
+                    style={{ backgroundColor: c.cor }}
+                  />
+                  <span className="truncate">{c.nome}</span>
+                </label>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
       <div className="flex-1 overflow-y-auto px-2 py-3">
         {filtered.length === 0 ? (
           <p className="px-2 py-4 text-center text-xs italic text-muted-foreground">
-            Nenhum tema encontrado.
+            {filtersActive
+              ? "Nenhum item encontrado para os filtros selecionados."
+              : "Nenhum tema encontrado."}
           </p>
         ) : (
           filtered.map((g) => (
@@ -252,7 +371,7 @@ export function FaqSidebar() {
               key={g.id}
               guia={g}
               depth={0}
-              forceOpen={!!term}
+              forceOpen={!!term || filtersActive}
               onOpenCategoria={setCatGuiaId}
             />
           ))
@@ -267,6 +386,8 @@ export function FaqSidebar() {
           selecionadasIniciais={currentCat.categorias.map((c) => c.id)}
         />
       )}
+
+      <AdicionarCategoriaDialog open={addCatOpen} onOpenChange={setAddCatOpen} />
     </aside>
   );
 }
