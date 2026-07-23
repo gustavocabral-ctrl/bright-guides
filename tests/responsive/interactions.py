@@ -125,7 +125,7 @@ async def test_hamburger(page: Page, vp: Viewport) -> list[str]:
 
     await page.wait_for_timeout(150)
     await assert_no_overflow(page, f"com sheet aberto ({vp.name})", errors)
-    await (OUT_DIR / f"hamburger-open__{vp.name}.png").parent.mkdir(exist_ok=True, parents=True)
+    
     await page.screenshot(path=str(OUT_DIR / f"hamburger-open__{vp.name}.png"))
 
     # fechar via Escape
