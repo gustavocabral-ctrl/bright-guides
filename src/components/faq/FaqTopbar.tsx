@@ -36,6 +36,10 @@ export function FaqTopbar() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isChat = pathname.endsWith("/chat");
   const isStats = pathname.endsWith("/stats");
+  const isAdminChats = pathname.startsWith("/faq/admin/chats");
+  const isImprovements = pathname.startsWith("/faq/admin/improvements");
+  const isUsers = pathname.startsWith("/faq/admin/users");
+  const isDoc = !isChat && !isStats && !isAdminChats && !isImprovements && !isUsers;
 
   const next = () => {
     if (searchTotal === 0) return;
