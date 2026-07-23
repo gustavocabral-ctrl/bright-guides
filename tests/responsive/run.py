@@ -119,19 +119,25 @@ async def run_one(page: Page, route_name: str, path: str, vp: Viewport) -> list[
         except Exception:
             errors.append(f"botão de menu (hambúrguer) não visível em {vp.name} ({path})")
 
-    # regra: sidebar de Guias só aparece no Documento e apenas em desktop
-    sidebar_visible = await page.evaluate(
+    # regra: sidebar de "Guias do documento" só aparece na tela Documento e a
+    # partir de md (>=768). Identificamos pelo título dentro do aside.
+    guias_sidebar_visible = await page.evaluate(
         """() => {
-            const aside = document.querySelector('aside');
-            if (!aside) return false;
-            const r = aside.getBoundingClientRect();
-            return r.width > 0 && r.height > 0;
+            const asides = Array.from(document.querySelectorAll('aside'));
+            for (const a of asides) {
+                if (a.textContent && a.textContent.includes('Guias do documento')) {
+                    const r = a.getBoundingClientRect();
+                    if (r.width > 0 && r.height > 0) return true;
+                }
+            }
+            return false;
         }"""
     )
-    if route_name == "documento" and is_desktop:
-        check(sidebar_visible, "sidebar de Guias deveria estar visível em /faq desktop", errors)
+    should_show = route_name == "documento" and vp.width >= 768
+    if should_show:
+        check(guias_sidebar_visible, f"sidebar de Guias deveria aparecer em {path} ({vp.name})", errors)
     else:
-        check(not sidebar_visible, f"sidebar de Guias não deveria estar visível em {path} ({vp.name})", errors)
+        check(not guias_sidebar_visible, f"sidebar de Guias não deveria aparecer em {path} ({vp.name})", errors)
 
     # screenshot para revisão manual
     shot = OUT_DIR / f"{route_name}__{vp.name}.png"
