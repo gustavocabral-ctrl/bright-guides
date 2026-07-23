@@ -120,47 +120,84 @@ export function FaqTopbar() {
             </SelectContent>
           </Select>
 
-          <Button size="sm" className="h-9 rounded-lg px-4 text-sm font-medium">
+          <Button size="sm" className="h-9 rounded-lg px-3 text-xs font-medium">
             Filtrar
           </Button>
+
+          <Link
+            to="/faq/admin/improvements"
+            className={cn(
+              "inline-flex h-9 items-center gap-1 rounded-lg border border-border px-2.5 text-xs font-medium transition-colors",
+              isImprovements
+                ? "bg-primary text-primary-foreground"
+                : "bg-[var(--surface)] text-foreground hover:bg-muted",
+            )}
+          >
+            <KanbanSquare className="h-3.5 w-3.5" />
+            Melhorias
+          </Link>
+          <Link
+            to="/faq/admin/users"
+            className={cn(
+              "inline-flex h-9 items-center gap-1 rounded-lg border border-border px-2.5 text-xs font-medium transition-colors",
+              isUsers
+                ? "bg-primary text-primary-foreground"
+                : "bg-[var(--surface)] text-foreground hover:bg-muted",
+            )}
+          >
+            <Users className="h-3.5 w-3.5" />
+            Usuários
+          </Link>
         </div>
 
-        <div className="inline-flex rounded-lg border border-border bg-muted/50 p-1">
+        <div className="inline-flex rounded-lg border border-border bg-muted/50 p-0.5">
           <Link
             to="/faq/stats"
             className={cn(
-              "inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+              "inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-colors",
               isStats
                 ? "bg-primary text-primary-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground",
             )}
           >
-            <BarChart3 className="h-4 w-4" />
+            <BarChart3 className="h-3.5 w-3.5" />
             Estatísticas
+          </Link>
+          <Link
+            to="/faq/admin/chats"
+            className={cn(
+              "inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-colors",
+              isAdminChats
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            <MessagesSquare className="h-3.5 w-3.5" />
+            Chats
           </Link>
           <Link
             to="/faq/chat"
             className={cn(
-              "inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+              "inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-colors",
               isChat
                 ? "bg-primary text-primary-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground",
             )}
           >
-            <MessageSquare className="h-4 w-4" />
+            <MessageSquare className="h-3.5 w-3.5" />
             Chat FAQ
           </Link>
           <Link
             to="/faq"
             className={cn(
-              "inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
-              !isChat && !isStats
+              "inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-colors",
+              isDoc
                 ? "bg-primary text-primary-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground",
             )}
           >
-            <FileText className="h-4 w-4" />
-            Documento FAQ
+            <FileText className="h-3.5 w-3.5" />
+            Documento
           </Link>
         </div>
       </div>
