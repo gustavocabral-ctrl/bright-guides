@@ -27,6 +27,7 @@ function FaqLayout() {
             <main className="flex-1 overflow-auto">
               <Outlet />
             </main>
+
           </div>
         </div>
       </TooltipProvider>
