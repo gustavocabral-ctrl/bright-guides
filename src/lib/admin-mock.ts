@@ -327,7 +327,7 @@ export const SESSIONS: ChatSession[] = Array.from({ length: 22 }).map((_, i) => 
         neg++;
         const reviewStatus: FeedbackReviewStatus =
           mod === 2 ? "not_reviewed" : "in_review";
-        if (reviewStatus !== "reviewed") unresolved++;
+        unresolved++;
         feedback = {
           value: "negative",
           negativeReason: NEGATIVE_REASONS[(i + j) % NEGATIVE_REASONS.length],
