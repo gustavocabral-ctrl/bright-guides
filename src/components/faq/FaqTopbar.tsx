@@ -1,5 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
+  BarChart3,
   Calendar as CalendarIcon,
   ChevronDown,
   ChevronUp,
@@ -31,6 +32,7 @@ export function FaqTopbar() {
   } = useFaq();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isChat = pathname.endsWith("/chat");
+  const isStats = pathname.endsWith("/stats");
 
   const next = () => {
     if (searchTotal === 0) return;
@@ -118,6 +120,18 @@ export function FaqTopbar() {
 
         <div className="inline-flex rounded-lg border border-border bg-muted/50 p-1">
           <Link
+            to="/faq/stats"
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+              isStats
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            <BarChart3 className="h-4 w-4" />
+            Estatísticas
+          </Link>
+          <Link
             to="/faq/chat"
             className={cn(
               "inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
@@ -133,7 +147,7 @@ export function FaqTopbar() {
             to="/faq"
             className={cn(
               "inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
-              !isChat
+              !isChat && !isStats
                 ? "bg-primary text-primary-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground",
             )}
