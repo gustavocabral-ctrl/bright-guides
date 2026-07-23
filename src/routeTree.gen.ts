@@ -14,6 +14,9 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as FaqIndexRouteImport } from './routes/faq.index'
 import { Route as FaqStatsRouteImport } from './routes/faq.stats'
 import { Route as FaqChatRouteImport } from './routes/faq.chat'
+import { Route as FaqAdminUsersRouteImport } from './routes/faq.admin.users'
+import { Route as FaqAdminImprovementsRouteImport } from './routes/faq.admin.improvements'
+import { Route as FaqAdminChatsRouteImport } from './routes/faq.admin.chats'
 
 const FaqRoute = FaqRouteImport.update({
   id: '/faq',
@@ -40,6 +43,21 @@ const FaqChatRoute = FaqChatRouteImport.update({
   path: '/chat',
   getParentRoute: () => FaqRoute,
 } as any)
+const FaqAdminUsersRoute = FaqAdminUsersRouteImport.update({
+  id: '/admin/users',
+  path: '/admin/users',
+  getParentRoute: () => FaqRoute,
+} as any)
+const FaqAdminImprovementsRoute = FaqAdminImprovementsRouteImport.update({
+  id: '/admin/improvements',
+  path: '/admin/improvements',
+  getParentRoute: () => FaqRoute,
+} as any)
+const FaqAdminChatsRoute = FaqAdminChatsRouteImport.update({
+  id: '/admin/chats',
+  path: '/admin/chats',
+  getParentRoute: () => FaqRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -47,12 +65,18 @@ export interface FileRoutesByFullPath {
   '/faq/chat': typeof FaqChatRoute
   '/faq/stats': typeof FaqStatsRoute
   '/faq/': typeof FaqIndexRoute
+  '/faq/admin/chats': typeof FaqAdminChatsRoute
+  '/faq/admin/improvements': typeof FaqAdminImprovementsRoute
+  '/faq/admin/users': typeof FaqAdminUsersRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/faq/chat': typeof FaqChatRoute
   '/faq/stats': typeof FaqStatsRoute
   '/faq': typeof FaqIndexRoute
+  '/faq/admin/chats': typeof FaqAdminChatsRoute
+  '/faq/admin/improvements': typeof FaqAdminImprovementsRoute
+  '/faq/admin/users': typeof FaqAdminUsersRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -61,13 +85,40 @@ export interface FileRoutesById {
   '/faq/chat': typeof FaqChatRoute
   '/faq/stats': typeof FaqStatsRoute
   '/faq/': typeof FaqIndexRoute
+  '/faq/admin/chats': typeof FaqAdminChatsRoute
+  '/faq/admin/improvements': typeof FaqAdminImprovementsRoute
+  '/faq/admin/users': typeof FaqAdminUsersRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/faq' | '/faq/chat' | '/faq/stats' | '/faq/'
+  fullPaths:
+    | '/'
+    | '/faq'
+    | '/faq/chat'
+    | '/faq/stats'
+    | '/faq/'
+    | '/faq/admin/chats'
+    | '/faq/admin/improvements'
+    | '/faq/admin/users'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/faq/chat' | '/faq/stats' | '/faq'
-  id: '__root__' | '/' | '/faq' | '/faq/chat' | '/faq/stats' | '/faq/'
+  to:
+    | '/'
+    | '/faq/chat'
+    | '/faq/stats'
+    | '/faq'
+    | '/faq/admin/chats'
+    | '/faq/admin/improvements'
+    | '/faq/admin/users'
+  id:
+    | '__root__'
+    | '/'
+    | '/faq'
+    | '/faq/chat'
+    | '/faq/stats'
+    | '/faq/'
+    | '/faq/admin/chats'
+    | '/faq/admin/improvements'
+    | '/faq/admin/users'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -112,6 +163,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FaqChatRouteImport
       parentRoute: typeof FaqRoute
     }
+    '/faq/admin/users': {
+      id: '/faq/admin/users'
+      path: '/admin/users'
+      fullPath: '/faq/admin/users'
+      preLoaderRoute: typeof FaqAdminUsersRouteImport
+      parentRoute: typeof FaqRoute
+    }
+    '/faq/admin/improvements': {
+      id: '/faq/admin/improvements'
+      path: '/admin/improvements'
+      fullPath: '/faq/admin/improvements'
+      preLoaderRoute: typeof FaqAdminImprovementsRouteImport
+      parentRoute: typeof FaqRoute
+    }
+    '/faq/admin/chats': {
+      id: '/faq/admin/chats'
+      path: '/admin/chats'
+      fullPath: '/faq/admin/chats'
+      preLoaderRoute: typeof FaqAdminChatsRouteImport
+      parentRoute: typeof FaqRoute
+    }
   }
 }
 
@@ -119,12 +191,18 @@ interface FaqRouteChildren {
   FaqChatRoute: typeof FaqChatRoute
   FaqStatsRoute: typeof FaqStatsRoute
   FaqIndexRoute: typeof FaqIndexRoute
+  FaqAdminChatsRoute: typeof FaqAdminChatsRoute
+  FaqAdminImprovementsRoute: typeof FaqAdminImprovementsRoute
+  FaqAdminUsersRoute: typeof FaqAdminUsersRoute
 }
 
 const FaqRouteChildren: FaqRouteChildren = {
   FaqChatRoute: FaqChatRoute,
   FaqStatsRoute: FaqStatsRoute,
   FaqIndexRoute: FaqIndexRoute,
+  FaqAdminChatsRoute: FaqAdminChatsRoute,
+  FaqAdminImprovementsRoute: FaqAdminImprovementsRoute,
+  FaqAdminUsersRoute: FaqAdminUsersRoute,
 }
 
 const FaqRouteWithChildren = FaqRoute._addFileChildren(FaqRouteChildren)
