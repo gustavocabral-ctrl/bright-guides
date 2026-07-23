@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as FaqIndexRouteImport } from './routes/faq.index'
+import { Route as FaqStatsRouteImport } from './routes/faq.stats'
 import { Route as FaqChatRouteImport } from './routes/faq.chat'
 
 const FaqRoute = FaqRouteImport.update({
@@ -29,6 +30,11 @@ const FaqIndexRoute = FaqIndexRouteImport.update({
   path: '/',
   getParentRoute: () => FaqRoute,
 } as any)
+const FaqStatsRoute = FaqStatsRouteImport.update({
+  id: '/stats',
+  path: '/stats',
+  getParentRoute: () => FaqRoute,
+} as any)
 const FaqChatRoute = FaqChatRouteImport.update({
   id: '/chat',
   path: '/chat',
@@ -39,11 +45,13 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/faq': typeof FaqRouteWithChildren
   '/faq/chat': typeof FaqChatRoute
+  '/faq/stats': typeof FaqStatsRoute
   '/faq/': typeof FaqIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/faq/chat': typeof FaqChatRoute
+  '/faq/stats': typeof FaqStatsRoute
   '/faq': typeof FaqIndexRoute
 }
 export interface FileRoutesById {
@@ -51,14 +59,15 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/faq': typeof FaqRouteWithChildren
   '/faq/chat': typeof FaqChatRoute
+  '/faq/stats': typeof FaqStatsRoute
   '/faq/': typeof FaqIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/faq' | '/faq/chat' | '/faq/'
+  fullPaths: '/' | '/faq' | '/faq/chat' | '/faq/stats' | '/faq/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/faq/chat' | '/faq'
-  id: '__root__' | '/' | '/faq' | '/faq/chat' | '/faq/'
+  to: '/' | '/faq/chat' | '/faq/stats' | '/faq'
+  id: '__root__' | '/' | '/faq' | '/faq/chat' | '/faq/stats' | '/faq/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -89,6 +98,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FaqIndexRouteImport
       parentRoute: typeof FaqRoute
     }
+    '/faq/stats': {
+      id: '/faq/stats'
+      path: '/stats'
+      fullPath: '/faq/stats'
+      preLoaderRoute: typeof FaqStatsRouteImport
+      parentRoute: typeof FaqRoute
+    }
     '/faq/chat': {
       id: '/faq/chat'
       path: '/chat'
@@ -101,11 +117,13 @@ declare module '@tanstack/react-router' {
 
 interface FaqRouteChildren {
   FaqChatRoute: typeof FaqChatRoute
+  FaqStatsRoute: typeof FaqStatsRoute
   FaqIndexRoute: typeof FaqIndexRoute
 }
 
 const FaqRouteChildren: FaqRouteChildren = {
   FaqChatRoute: FaqChatRoute,
+  FaqStatsRoute: FaqStatsRoute,
   FaqIndexRoute: FaqIndexRoute,
 }
 
