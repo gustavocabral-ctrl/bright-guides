@@ -570,6 +570,7 @@ function AnalysisDrawer({
   onClose,
   onPrev,
   onNext,
+  overlay = false,
 }: {
   message: ChatMessage;
   index: number;
@@ -577,10 +578,18 @@ function AnalysisDrawer({
   onClose: () => void;
   onPrev: () => void;
   onNext: () => void;
+  overlay?: boolean;
 }) {
   const a = message.analysis!;
   return (
-    <aside className="flex w-[440px] shrink-0 flex-col overflow-hidden border-l border-border bg-[var(--surface)]">
+    <aside
+      className={cn(
+        "flex shrink-0 flex-col overflow-hidden bg-[var(--surface)]",
+        overlay
+          ? "h-full w-full"
+          : "w-[440px] border-l border-border",
+      )}
+    >
       <div className="flex items-center justify-between border-b border-border px-4 py-3">
         <div>
           <p className="text-sm font-semibold">Análise da resposta</p>
