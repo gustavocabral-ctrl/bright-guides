@@ -211,6 +211,7 @@ export function ChatsView() {
                 onOpenAnalysis={
                   m.analysis ? () => setAnalysisMsgId(m.id) : undefined
                 }
+                setAnalysisTriggerRef={setAnalysisTriggerRef}
                 active={m.id === analysisMsgId}
               />
             ))}
@@ -223,7 +224,7 @@ export function ChatsView() {
             message={analysisMsg}
             index={analysisIndex}
             total={analysisMessages.length}
-            onClose={() => setAnalysisMsgId(null)}
+            onClose={closeAnalysis}
             onPrev={() =>
               setAnalysisMsgId(analysisMessages[Math.max(0, analysisIndex - 1)].id)
             }
@@ -255,7 +256,7 @@ export function ChatsView() {
             message={analysisMsg}
             index={analysisIndex}
             total={analysisMessages.length}
-            onClose={() => setAnalysisMsgId(null)}
+            onClose={closeAnalysis}
             onPrev={() =>
               setAnalysisMsgId(analysisMessages[Math.max(0, analysisIndex - 1)].id)
             }
