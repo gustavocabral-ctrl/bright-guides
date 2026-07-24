@@ -70,7 +70,10 @@ export function ChatsView() {
 
   const [analysisMsgId, setAnalysisMsgId] = useState<string | null>(null);
   const analysisMessages = useMemo(
-    () => selected.messages.filter((m) => m.role === "assistant" && m.analysis),
+    () =>
+      selected.messages.filter(
+        (m) => m.role === "assistant" && m.analysis && m.feedback?.value === "negative",
+      ),
     [selected],
   );
   const analysisIndex = analysisMessages.findIndex((m) => m.id === analysisMsgId);
@@ -255,7 +258,9 @@ export function ChatsView() {
                 key={m.id}
                 message={m}
                 onOpenAnalysis={
-                  m.analysis ? () => setAnalysisMsgId(m.id) : undefined
+                  m.analysis && m.feedback?.value === "negative"
+                    ? () => setAnalysisMsgId(m.id)
+                    : undefined
                 }
                 setAnalysisTriggerRef={setAnalysisTriggerRef}
                 active={m.id === analysisMsgId}
@@ -561,7 +566,11 @@ function MobileChatPager({
                 <MessageBubble
                   key={m.id}
                   message={m}
-                  onOpenAnalysis={m.analysis ? () => onOpenAnalysis(m.id) : undefined}
+                  onOpenAnalysis={
+                    m.analysis && m.feedback?.value === "negative"
+                      ? () => onOpenAnalysis(m.id)
+                      : undefined
+                  }
                   setAnalysisTriggerRef={setAnalysisTriggerRef}
                   active={m.id === analysisMsgId}
                 />
