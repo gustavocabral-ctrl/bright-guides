@@ -341,6 +341,18 @@ function MobileChatPager({
     };
   }, [sessions, selectedId, onSelect]);
 
+  // Explicit announcement for AT users when navigation happens via
+  // buttons or keyboard shortcuts (scroll-snap changes are covered by the
+  // visible polite indicator, but discrete jumps deserve an assertive-ish
+  // re-announcement even if the position number happens to repeat).
+  const [announcement, setAnnouncement] = useState("");
+  const announce = (idx: number) => {
+    // Append a zero-width space toggle so identical text still triggers
+    // screen readers to re-read the live region.
+    const base = `Sessão ${idx + 1} de ${sessions.length}`;
+    setAnnouncement((prev) => (prev.endsWith("\u200B") ? base : base + "\u200B"));
+  };
+
   const goTo = (idx: number) => {
     const clamped = Math.max(0, Math.min(sessions.length - 1, idx));
     const target = sessions[clamped];
@@ -350,6 +362,7 @@ function MobileChatPager({
       containerRef.current.scrollTo({ left: el.offsetLeft, behavior: "smooth" });
     }
     onSelect(target.id);
+    announce(clamped);
   };
   const goPrev = () => goTo(selectedIndex - 1);
   const goNext = () => goTo(selectedIndex + 1);
