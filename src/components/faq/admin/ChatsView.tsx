@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearch, useNavigate, Link } from "@tanstack/react-router";
 import {
   ChevronLeft,
