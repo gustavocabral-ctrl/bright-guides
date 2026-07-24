@@ -70,7 +70,10 @@ export function ChatsView() {
 
   const [analysisMsgId, setAnalysisMsgId] = useState<string | null>(null);
   const analysisMessages = useMemo(
-    () => selected.messages.filter((m) => m.role === "assistant" && m.analysis),
+    () =>
+      selected.messages.filter(
+        (m) => m.role === "assistant" && m.analysis && m.feedback?.value === "negative",
+      ),
     [selected],
   );
   const analysisIndex = analysisMessages.findIndex((m) => m.id === analysisMsgId);
