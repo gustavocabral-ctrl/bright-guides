@@ -112,10 +112,11 @@ async def run_viewport(page: Page, vp: Viewport) -> list[str]:
     results.append(f"[{vp.name}] inserção bloco imagem OK")
 
     # ---- 5. Botões de reordenar/remover existem no DOM ----
-    up_btns = page.get_by_role("button", name="Mover para cima")
-    down_btns = page.get_by_role("button", name="Mover para baixo")
-    del_btns = page.get_by_role("button", name="Remover bloco")
-    # 2 blocos existentes → 2 conjuntos de controles
+    # Ficam com `hidden group-hover:flex` — invisíveis até hover. Locator CSS
+    # ignora visibilidade, então validamos presença no DOM.
+    up_btns = page.locator('button[aria-label="Mover para cima"]')
+    down_btns = page.locator('button[aria-label="Mover para baixo"]')
+    del_btns = page.locator('button[aria-label="Remover bloco"]')
     assert await up_btns.count() >= 2, "faltam botões mover-cima"
     assert await down_btns.count() >= 2, "faltam botões mover-baixo"
     assert await del_btns.count() >= 2, "faltam botões remover"
