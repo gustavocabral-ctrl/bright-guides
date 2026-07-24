@@ -779,11 +779,48 @@ function AnalysisDrawer({
   const asideRef = useRef<HTMLElement | null>(null);
   const closeBtnRef = useRef<HTMLButtonElement | null>(null);
 
+  // Live-region announcement for screen readers when the drawer's content
+  // changes: navigating between analyses (prev/next) or toggling sections
+  // in the accordion. Announcements are debounced by React re-render.
+  const [liveMessage, setLiveMessage] = useState("");
+  const didMountRef = useRef(false);
+  const openSectionsRef = useRef<string[]>(["q", "r", "e"]);
+  const SECTION_LABELS: Record<string, string> = {
+    q: "Entendimento da pergunta",
+    r: "Busca no FAQ",
+    e: "Avaliação das evidências",
+    d: "Decisão da IA",
+    v: "Validação da resposta",
+  };
+
   // Initial focus on the close button when the drawer/overlay opens
   useEffect(() => {
     const t = setTimeout(() => closeBtnRef.current?.focus(), 0);
     return () => clearTimeout(t);
   }, [message.id]);
+
+  // Announce navigation between analyses (skip initial mount — the outer
+  // "Análise aberta" announcer already covers the initial open).
+  useEffect(() => {
+    if (!didMountRef.current) {
+      didMountRef.current = true;
+      return;
+    }
+    const subject = a.chatSubject || "sem assunto";
+    setLiveMessage(`Análise ${index + 1} de ${total}. Assunto: ${subject}.`);
+  }, [message.id, index, total, a.chatSubject]);
+
+  const handleAccordionChange = (value: string[]) => {
+    const prev = openSectionsRef.current;
+    const opened = value.filter((v) => !prev.includes(v));
+    const closed = prev.filter((v) => !value.includes(v));
+    openSectionsRef.current = value;
+    if (opened.length) {
+      setLiveMessage(`Seção aberta: ${SECTION_LABELS[opened[0]] ?? opened[0]}.`);
+    } else if (closed.length) {
+      setLiveMessage(`Seção recolhida: ${SECTION_LABELS[closed[0]] ?? closed[0]}.`);
+    }
+  };
 
   // Focus trap: keep Tab / Shift+Tab cycling inside the drawer and recapture
   // focus if it leaves the drawer (e.g. via mouse or programmatic moves).
@@ -905,7 +942,12 @@ function AnalysisDrawer({
         </div>
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
-        <Accordion type="multiple" defaultValue={["q", "r", "e"]} className="space-y-1">
+        <Accordion
+          type="multiple"
+          defaultValue={["q", "r", "e"]}
+          onValueChange={handleAccordionChange}
+          className="space-y-1"
+        >
           <AccordionItem value="q" className="rounded-md border border-border px-3">
             <AccordionTrigger className="text-sm">Entendimento da pergunta</AccordionTrigger>
             <AccordionContent className="space-y-2 text-xs">
@@ -1038,6 +1080,15 @@ function AnalysisDrawer({
             </AccordionContent>
           </AccordionItem>
         </Accordion>
+      </div>
+      <div
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        className="sr-only"
+        data-testid="analysis-drawer-announcer"
+      >
+        {liveMessage}
       </div>
     </aside>
   );
