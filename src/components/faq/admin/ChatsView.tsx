@@ -361,7 +361,10 @@ function MobileChatPager({
     if (!target) return;
     const el = slideRefs.current.get(target.id);
     if (el && containerRef.current) {
-      containerRef.current.scrollTo({ left: el.offsetLeft, behavior: "smooth" });
+      containerRef.current.scrollTo({
+        left: el.offsetLeft,
+        behavior: reducedMotion ? "auto" : "smooth",
+      });
     }
     onSelect(target.id);
     announce(clamped);
