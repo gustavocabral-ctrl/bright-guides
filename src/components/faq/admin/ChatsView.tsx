@@ -279,12 +279,14 @@ function MobileChatPager({
   onSelect,
   onOpenAnalysis,
   analysisMsgId,
+  setAnalysisTriggerRef,
 }: {
   sessions: ChatSession[];
   selectedId: string;
   onSelect: (id: string) => void;
   onOpenAnalysis: (id: string) => void;
   analysisMsgId: string | null;
+  setAnalysisTriggerRef?: (el: HTMLButtonElement | null) => void;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const slideRefs = useRef<Map<string, HTMLDivElement>>(new Map());
