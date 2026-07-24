@@ -344,7 +344,12 @@ export const SESSIONS: ChatSession[] = Array.from({ length: 22 }).map((_, i) => 
           `Para resolver ${subject.toLowerCase()}, siga: 1) verifique o item A; 2) confirme o item B; 3) reinicie o processo. Caso persista, consulte o artigo relacionado.`,
           {
             feedback,
-            analysis: j % 3 === 1 ? undefined : baseAnalysis(subject, intent, cov),
+            analysis:
+              feedback?.value === "negative"
+                ? baseAnalysis(subject, intent, cov)
+                : j % 3 === 1
+                  ? undefined
+                  : baseAnalysis(subject, intent, cov),
           },
         ),
       );
