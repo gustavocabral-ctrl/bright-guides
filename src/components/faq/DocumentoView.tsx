@@ -432,15 +432,19 @@ export function DocumentoView() {
                 size="sm"
                 onClick={handleSave}
                 disabled={isEmpty || saving}
+                aria-busy={saving}
+                aria-label={saving ? "Salvando alterações" : "Salvar alterações"}
                 data-testid="save-button"
               >
                 {saving ? (
                   <>
-                    <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> Salvando...
+                    <Loader2 aria-hidden="true" className="mr-1.5 h-4 w-4 animate-spin" />
+                    <span>Salvando...</span>
                   </>
                 ) : (
                   <>
-                    <Save className="mr-1.5 h-4 w-4" /> Salvar alterações
+                    <Save aria-hidden="true" className="mr-1.5 h-4 w-4" />
+                    <span>Salvar alterações</span>
                   </>
                 )}
               </Button>
