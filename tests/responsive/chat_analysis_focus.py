@@ -37,13 +37,13 @@ async def run_viewport(width: int, height: int, label: str) -> None:
         await page.screenshot(path=str(SCREENSHOTS / f"{label}_open.png"))
 
         if width < 768:
-            overlay = page.locator("div.fixed.inset-0.z-50").first
+            overlay = page.locator("[data-testid='analysis-overlay']").first
             if not await overlay.is_visible():
                 FAILURES.append(f"{label}: overlay did not open")
                 await browser.close()
                 return
         else:
-            drawer = page.locator("aside.w-[440px]").first
+            drawer = page.locator("[data-testid='analysis-drawer']").first
             if not await drawer.is_visible():
                 FAILURES.append(f"{label}: drawer did not open")
                 await browser.close()
@@ -55,11 +55,11 @@ async def run_viewport(width: int, height: int, label: str) -> None:
         await page.screenshot(path=str(SCREENSHOTS / f"{label}_closed.png"))
 
         if width < 768:
-            overlay_count = await page.locator("div.fixed.inset-0.z-50").count()
+            overlay_count = await page.locator("[data-testid='analysis-overlay']").count()
             if overlay_count != 0:
                 FAILURES.append(f"{label}: overlay still visible after Escape")
         else:
-            drawer_count = await page.locator("aside.w-[440px]").count()
+            drawer_count = await page.locator("[data-testid='analysis-drawer']").count()
             if drawer_count != 0:
                 FAILURES.append(f"{label}: drawer still visible after Escape")
 
