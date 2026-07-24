@@ -203,7 +203,7 @@ async def test_date_filter(page: Page, vp: Viewport) -> list[str]:
     await open_menu_if_needed(page, vp, errors)
 
     # Radix Select trigger = combobox com aria-label ou placeholder "Data de ajuste"
-    trigger = page.get_by_role("combobox").filter(has_text="Data de").first
+    trigger = page.get_by_role("combobox").first
     try:
         await trigger.wait_for(state="visible", timeout=3000)
     except Exception:
