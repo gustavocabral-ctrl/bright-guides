@@ -81,8 +81,16 @@ export function ChatsView() {
     lastAnalysisButtonRef.current = el;
   };
 
+  const [analysisAnnouncement, setAnalysisAnnouncement] = useState("");
   const closeAnalysis = useCallback(() => {
     setAnalysisMsgId(null);
+    // Toggle a trailing zero-width space so identical messages are still
+    // re-announced by screen readers.
+    setAnalysisAnnouncement((prev) =>
+      prev.endsWith("\u200B")
+        ? "Análise da resposta fechada."
+        : "Análise da resposta fechada.\u200B",
+    );
     setTimeout(() => {
       lastAnalysisButtonRef.current?.focus();
     }, 0);
@@ -113,6 +121,15 @@ export function ChatsView() {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
+      <div
+        className="sr-only"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        data-testid="analysis-state-announcer"
+      >
+        {analysisAnnouncement}
+      </div>
       {/* Header */}
       <div className="border-b border-border bg-[var(--surface)] px-6 py-4">
         <div className="flex items-center justify-between gap-4">
