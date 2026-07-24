@@ -89,7 +89,7 @@ async def run_viewport(width: int, height: int, label: str) -> None:
                 return
 
             # Click inside the drawer content; it should NOT close the overlay.
-            drawer = page.locator("[data-testid='analysis-drawer']")
+            drawer = page.locator("[data-testid='analysis-overlay'] [data-testid='analysis-drawer']")
             await drawer.click()
             await page.wait_for_timeout(300)
             if await page.locator("[data-testid='analysis-overlay']").count() == 0:
