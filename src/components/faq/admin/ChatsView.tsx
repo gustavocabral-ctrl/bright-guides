@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearch, useNavigate, Link } from "@tanstack/react-router";
 import {
   ChevronLeft,
@@ -74,6 +74,31 @@ export function ChatsView() {
   );
   const analysisIndex = analysisMessages.findIndex((m) => m.id === analysisMsgId);
   const analysisMsg = analysisIndex >= 0 ? analysisMessages[analysisIndex] : null;
+
+  const lastAnalysisButtonRef = useRef<HTMLButtonElement | null>(null);
+  const setAnalysisTriggerRef = (el: HTMLButtonElement | null) => {
+    lastAnalysisButtonRef.current = el;
+  };
+
+  const closeAnalysis = useCallback(() => {
+    setAnalysisMsgId(null);
+    setTimeout(() => {
+      lastAnalysisButtonRef.current?.focus();
+    }, 0);
+  }, []);
+
+  // Close analysis overlay/drawer on Escape
+  useEffect(() => {
+    if (!analysisMsgId) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        closeAnalysis();
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [analysisMsgId, closeAnalysis]);
 
   const removeChip = (key: string) => {
     const next: Record<string, string | undefined> = { ...search };
@@ -186,6 +211,7 @@ export function ChatsView() {
                 onOpenAnalysis={
                   m.analysis ? () => setAnalysisMsgId(m.id) : undefined
                 }
+                setAnalysisTriggerRef={setAnalysisTriggerRef}
                 active={m.id === analysisMsgId}
               />
             ))}
@@ -198,7 +224,7 @@ export function ChatsView() {
             message={analysisMsg}
             index={analysisIndex}
             total={analysisMessages.length}
-            onClose={() => setAnalysisMsgId(null)}
+            onClose={closeAnalysis}
             onPrev={() =>
               setAnalysisMsgId(analysisMessages[Math.max(0, analysisIndex - 1)].id)
             }
@@ -221,16 +247,20 @@ export function ChatsView() {
         }}
         onOpenAnalysis={(id) => setAnalysisMsgId(id)}
         analysisMsgId={analysisMsgId}
+        setAnalysisTriggerRef={setAnalysisTriggerRef}
       />
 
       {/* Mobile: fullscreen analysis overlay */}
       {analysisMsg && (
-        <div className="fixed inset-0 z-50 flex flex-col bg-[var(--surface)] md:hidden">
+        <div
+          data-testid="analysis-overlay"
+          className="fixed inset-0 z-50 flex flex-col bg-[var(--surface)] md:hidden"
+        >
           <AnalysisDrawer
             message={analysisMsg}
             index={analysisIndex}
             total={analysisMessages.length}
-            onClose={() => setAnalysisMsgId(null)}
+            onClose={closeAnalysis}
             onPrev={() =>
               setAnalysisMsgId(analysisMessages[Math.max(0, analysisIndex - 1)].id)
             }
@@ -253,12 +283,14 @@ function MobileChatPager({
   onSelect,
   onOpenAnalysis,
   analysisMsgId,
+  setAnalysisTriggerRef,
 }: {
   sessions: ChatSession[];
   selectedId: string;
   onSelect: (id: string) => void;
   onOpenAnalysis: (id: string) => void;
   analysisMsgId: string | null;
+  setAnalysisTriggerRef?: (el: HTMLButtonElement | null) => void;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const slideRefs = useRef<Map<string, HTMLDivElement>>(new Map());
@@ -457,6 +489,7 @@ function MobileChatPager({
                   key={m.id}
                   message={m}
                   onOpenAnalysis={m.analysis ? () => onOpenAnalysis(m.id) : undefined}
+                  setAnalysisTriggerRef={setAnalysisTriggerRef}
                   active={m.id === analysisMsgId}
                 />
               ))}
@@ -566,10 +599,12 @@ function MessageBubble({
   message,
   onOpenAnalysis,
   active,
+  setAnalysisTriggerRef,
 }: {
   message: ChatMessage;
   onOpenAnalysis?: () => void;
   active: boolean;
+  setAnalysisTriggerRef?: (el: HTMLButtonElement | null) => void;
 }) {
   const isUser = message.role === "user";
   const fb = message.feedback;
@@ -635,7 +670,10 @@ function MessageBubble({
                 variant="outline"
                 size="sm"
                 className="ml-auto h-7 text-xs"
-                onClick={onOpenAnalysis}
+                onClick={(e) => {
+                  setAnalysisTriggerRef?.(e.currentTarget);
+                  onOpenAnalysis();
+                }}
               >
                 Análise da resposta
               </Button>
@@ -667,6 +705,7 @@ function AnalysisDrawer({
   const a = message.analysis!;
   return (
     <aside
+      data-testid="analysis-drawer"
       className={cn(
         "flex shrink-0 flex-col overflow-hidden bg-[var(--surface)]",
         overlay
