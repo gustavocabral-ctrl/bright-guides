@@ -566,7 +566,11 @@ function MobileChatPager({
                 <MessageBubble
                   key={m.id}
                   message={m}
-                  onOpenAnalysis={m.analysis ? () => onOpenAnalysis(m.id) : undefined}
+                  onOpenAnalysis={
+                    m.analysis && m.feedback?.value === "negative"
+                      ? () => onOpenAnalysis(m.id)
+                      : undefined
+                  }
                   setAnalysisTriggerRef={setAnalysisTriggerRef}
                   active={m.id === analysisMsgId}
                 />
