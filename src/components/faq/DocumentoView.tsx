@@ -75,6 +75,15 @@ export function DocumentoView() {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const readRef = useRef<HTMLDivElement>(null);
+  const errorBannerRef = useRef<HTMLDivElement>(null);
+
+  // Move keyboard focus to the error banner when a save fails so screen
+  // readers and keyboard users land directly on the recovery affordance.
+  useEffect(() => {
+    if (saveError && errorBannerRef.current) {
+      errorBannerRef.current.focus();
+    }
+  }, [saveError]);
 
   useEffect(() => setMounted(true), []);
 
