@@ -15,6 +15,8 @@ import {
   Video as VideoIcon,
   ArrowUp,
   ArrowDown,
+  Loader2,
+  RotateCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -70,12 +72,30 @@ export function DocumentoView() {
   const [editing, setEditing] = useState(false);
   const [catDialogOpen, setCatDialogOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const readRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     setEditing(false);
+  }, [selected?.id]);
+
+  // Deterministic loading/error states for visual regression / debugging.
+  // Pin via URL params: ?saveState=loading | ?saveState=error
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const s = new URLSearchParams(window.location.search).get("saveState");
+    if (s === "loading") {
+      setEditing(true);
+      setSaving(true);
+      setSaveError(null);
+    } else if (s === "error") {
+      setEditing(true);
+      setSaving(false);
+      setSaveError("Não foi possível salvar. Verifique sua conexão e tente novamente.");
+    }
   }, [selected?.id]);
 
   const nivel = selected ? depthOf(selected.id) : 2;
@@ -133,6 +153,26 @@ export function DocumentoView() {
 
   const removeBloco = (id: string) => {
     updateBlocos(selected.id, blocos.filter((b) => b.id !== id));
+  };
+
+  const handleSave = async () => {
+    if (isEmpty || saving) return;
+    setSaveError(null);
+    setSaving(true);
+    try {
+      // Persistência é local; simulamos latência mínima para permitir feedback
+      // consistente e reproduzir o estado de "salvando" no editor.
+      await new Promise((r) => setTimeout(r, 600));
+      setSaving(false);
+      setEditing(false);
+    } catch (err) {
+      setSaving(false);
+      setSaveError(
+        err instanceof Error
+          ? err.message
+          : "Não foi possível salvar. Tente novamente.",
+      );
+    }
   };
 
   const formatted = mounted
@@ -296,6 +336,31 @@ export function DocumentoView() {
           )}
         </div>
 
+        {/* Save error banner */}
+        {saveError && (editing || isEmpty) && (
+          <div
+            role="alert"
+            aria-live="polite"
+            data-testid="save-error-banner"
+            className="mx-8 mt-4 flex items-start gap-3 rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+          >
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+            <div className="flex-1">
+              <p className="font-medium">Erro ao salvar</p>
+              <p className="text-destructive/80">{saveError}</p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleSave}
+              disabled={saving || isEmpty}
+              className="border-destructive/40 text-destructive hover:bg-destructive/10"
+            >
+              <RotateCw className="mr-1.5 h-4 w-4" /> Tentar novamente
+            </Button>
+          </div>
+        )}
+
         {/* Footer actions */}
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border bg-muted/30 px-8 py-4">
           <div className="flex gap-2">
@@ -305,13 +370,13 @@ export function DocumentoView() {
                   variant="ghost"
                   size="sm"
                   onClick={() => !isEmpty && setEditing(false)}
-                  disabled={isEmpty}
+                  disabled={isEmpty || saving}
                 >
                   <X className="mr-1.5 h-4 w-4" /> Cancelar
                 </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" disabled={saving}>
                       <Plus className="mr-1.5 h-4 w-4" /> Adicionar bloco
                     </Button>
                   </DropdownMenuTrigger>
@@ -335,12 +400,25 @@ export function DocumentoView() {
             )}
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" disabled={saving}>
               <Send className="mr-1.5 h-4 w-4" /> Publicar FAQ
             </Button>
             {(editing || isEmpty) && (
-              <Button size="sm" onClick={() => setEditing(false)} disabled={isEmpty}>
-                <Save className="mr-1.5 h-4 w-4" /> Salvar alterações
+              <Button
+                size="sm"
+                onClick={handleSave}
+                disabled={isEmpty || saving}
+                data-testid="save-button"
+              >
+                {saving ? (
+                  <>
+                    <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> Salvando...
+                  </>
+                ) : (
+                  <>
+                    <Save className="mr-1.5 h-4 w-4" /> Salvar alterações
+                  </>
+                )}
               </Button>
             )}
           </div>
