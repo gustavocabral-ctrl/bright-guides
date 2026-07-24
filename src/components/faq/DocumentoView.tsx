@@ -84,9 +84,11 @@ export function DocumentoView() {
     if (typeof window === "undefined") return;
     const s = new URLSearchParams(window.location.search).get("saveState");
     if (s === "loading") {
+      setEditing(true);
       setSaving(true);
       setSaveError(null);
     } else if (s === "error") {
+      setEditing(true);
       setSaving(false);
       setSaveError("Não foi possível salvar. Verifique sua conexão e tente novamente.");
     }
