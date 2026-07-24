@@ -354,12 +354,12 @@ export function DocumentoView() {
             aria-atomic="true"
             tabIndex={-1}
             data-testid="save-error-banner"
-            className="mx-8 mt-4 flex items-start gap-3 rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive outline-none focus-visible:ring-2 focus-visible:ring-destructive/60"
+            className="mx-8 mt-4 flex items-start gap-3 rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-destructive/60"
           >
-            <AlertCircle aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0" />
+            <AlertCircle aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
             <div className="flex-1">
-              <p className="font-medium">Erro ao salvar</p>
-              <p className="text-destructive/90">{saveError}</p>
+              <p className="font-semibold text-foreground">Erro ao salvar</p>
+              <p className="text-foreground/90">{saveError}</p>
             </div>
             <Button
               variant="outline"
