@@ -252,7 +252,10 @@ export function ChatsView() {
 
       {/* Mobile: fullscreen analysis overlay */}
       {analysisMsg && (
-        <div className="fixed inset-0 z-50 flex flex-col bg-[var(--surface)] md:hidden">
+        <div
+          data-testid="analysis-overlay"
+          className="fixed inset-0 z-50 flex flex-col bg-[var(--surface)] md:hidden"
+        >
           <AnalysisDrawer
             message={analysisMsg}
             index={analysisIndex}
