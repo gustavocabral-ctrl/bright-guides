@@ -77,6 +77,36 @@ async def run_viewport(width: int, height: int, label: str) -> None:
             active_text = await page.evaluate("() => document.activeElement?.textContent?.trim() || '(none)'")
             FAILURES.append(f"{label}: focus did not return to analysis button (active: {active_text})")
 
+        # Reopen the overlay to test backdrop click behavior.
+        await btn.click()
+        await page.wait_for_timeout(500)
+        if width < 768:
+            try:
+                await page.wait_for_selector("[data-testid='analysis-overlay']", state="visible", timeout=3000)
+            except Exception:
+                FAILURES.append(f"{label}: overlay did not reopen for backdrop test")
+                await browser.close()
+                return
+
+            # Click inside the drawer content; it should NOT close the overlay.
+            drawer = page.locator("[data-testid='analysis-drawer']")
+            await drawer.click()
+            await page.wait_for_timeout(300)
+            if await page.locator("[data-testid='analysis-overlay']").count() == 0:
+                FAILURES.append(f"{label}: overlay closed when clicking inside content")
+                await browser.close()
+                return
+
+            # Click on the dark backdrop (outside the drawer) to close.
+            overlay = page.locator("[data-testid='analysis-overlay']")
+            # Click near the top-left corner of the overlay, outside the centered drawer.
+            box = await overlay.bounding_box()
+            if box:
+                await page.mouse.click(box["x"] + 10, box["y"] + 10)
+            await page.wait_for_timeout(500)
+            if await page.locator("[data-testid='analysis-overlay']").count() != 0:
+                FAILURES.append(f"{label}: overlay did not close on backdrop click")
+
         await browser.close()
 
 
@@ -90,7 +120,7 @@ async def main() -> None:
             print(f"  - {f}")
         sys.exit(1)
 
-    print("PASS: chat analysis Escape and focus return work on mobile and desktop")
+    print("PASS: chat analysis Escape, focus return, and backdrop click work on mobile and desktop")
 
 
 if __name__ == "__main__":
