@@ -76,18 +76,46 @@ def contrast_ratio(fg_css: str, bg_css: str) -> float:
 
 
 async def _effective_bg(locator) -> str:
-    """Walk up the tree until an element with a non-transparent bg is found."""
+    """Walk up the tree until an element with a non-transparent bg is found.
+    Returns an rgb()/rgba() string (canvas-normalized so oklch/lch work)."""
     return await locator.evaluate(
         """el => {
+            const norm = (c) => {
+                const cv = document.createElement('canvas');
+                cv.width = cv.height = 1;
+                const ctx = cv.getContext('2d');
+                ctx.fillStyle = '#000';
+                ctx.fillStyle = c;
+                ctx.fillRect(0,0,1,1);
+                const [r,g,b,a] = ctx.getImageData(0,0,1,1).data;
+                return `rgba(${r}, ${g}, ${b}, ${a/255})`;
+            };
             let node = el;
             while (node) {
                 const bg = getComputedStyle(node).backgroundColor;
-                if (bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent') return bg;
+                if (bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent') return norm(bg);
                 node = node.parentElement;
             }
-            return 'rgb(255, 255, 255)';
+            return 'rgba(255, 255, 255, 1)';
         }"""
     )
+
+
+async def _color_of(locator) -> str:
+    return await locator.evaluate(
+        """el => {
+            const c = getComputedStyle(el).color;
+            const cv = document.createElement('canvas');
+            cv.width = cv.height = 1;
+            const ctx = cv.getContext('2d');
+            ctx.fillStyle = '#000';
+            ctx.fillStyle = c;
+            ctx.fillRect(0,0,1,1);
+            const [r,g,b,a] = ctx.getImageData(0,0,1,1).data;
+            return `rgba(${r}, ${g}, ${b}, ${a/255})`;
+        }"""
+    )
+
 
 
 async def check_loading(page, results: list[dict], label: str) -> None:
