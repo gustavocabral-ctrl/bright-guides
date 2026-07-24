@@ -705,6 +705,7 @@ function AnalysisDrawer({
   const a = message.analysis!;
   return (
     <aside
+      data-testid="analysis-drawer"
       className={cn(
         "flex shrink-0 flex-col overflow-hidden bg-[var(--surface)]",
         overlay
