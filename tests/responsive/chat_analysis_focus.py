@@ -33,25 +33,29 @@ async def run_viewport(width: int, height: int, label: str) -> None:
             return
 
         await btn.click()
-        await page.wait_for_timeout(300)
-        await page.screenshot(path=str(SCREENSHOTS / f"{label}_open.png"))
+        await page.wait_for_timeout(500)
 
+        # Wait for the analysis panel to render before checking.
         if width < 768:
-            overlay = page.locator("[data-testid='analysis-overlay']").first
-            if not await overlay.is_visible():
+            try:
+                await page.wait_for_selector("[data-testid='analysis-overlay']", state="visible", timeout=3000)
+            except Exception:
                 FAILURES.append(f"{label}: overlay did not open")
                 await browser.close()
                 return
         else:
-            drawer = page.locator("[data-testid='analysis-drawer']").first
-            if not await drawer.is_visible():
+            try:
+                await page.wait_for_selector("[data-testid='analysis-drawer']", state="visible", timeout=3000)
+            except Exception:
                 FAILURES.append(f"{label}: drawer did not open")
                 await browser.close()
                 return
 
+        await page.screenshot(path=str(SCREENSHOTS / f"{label}_open.png"))
+
         # Press Escape to close.
         await page.keyboard.press("Escape")
-        await page.wait_for_timeout(300)
+        await page.wait_for_timeout(500)
         await page.screenshot(path=str(SCREENSHOTS / f"{label}_closed.png"))
 
         if width < 768:
