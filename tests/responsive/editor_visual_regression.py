@@ -1,4 +1,5 @@
-"""
+import shutil
+
 Regressão visual do editor de conteúdo do Documento FAQ.
 
 Captura estados determinísticos do editor em mobile / tablet / desktop e
