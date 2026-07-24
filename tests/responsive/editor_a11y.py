@@ -176,7 +176,7 @@ async def check_error(page, results: list[dict], label: str) -> None:
     )
 
     # Contrast: title paragraph vs banner background.
-    title = banner.locator("p.font-medium").first
+    title = banner.locator("p").first
     fg_title = await _color_of(title)
     bg = await _effective_bg(banner)
     ratio_title = contrast_ratio(fg_title, bg)
