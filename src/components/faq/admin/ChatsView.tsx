@@ -300,7 +300,8 @@ export function ChatsView() {
       {analysisMsg && (
         <div
           data-testid="analysis-overlay"
-          className="fixed inset-0 z-50 flex flex-col bg-[var(--surface)] md:hidden"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm md:hidden"
+          onClick={closeAnalysis}
         >
           <AnalysisDrawer
             message={analysisMsg}
