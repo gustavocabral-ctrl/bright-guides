@@ -78,6 +78,10 @@ export function DocumentoView() {
 
   useEffect(() => setMounted(true), []);
 
+  useEffect(() => {
+    setEditing(false);
+  }, [selected?.id]);
+
   // Deterministic loading/error states for visual regression / debugging.
   // Pin via URL params: ?saveState=loading | ?saveState=error
   useEffect(() => {
@@ -92,10 +96,6 @@ export function DocumentoView() {
       setSaving(false);
       setSaveError("Não foi possível salvar. Verifique sua conexão e tente novamente.");
     }
-  }, [selected?.id]);
-
-  useEffect(() => {
-    setEditing(false);
   }, [selected?.id]);
 
   const nivel = selected ? depthOf(selected.id) : 2;
