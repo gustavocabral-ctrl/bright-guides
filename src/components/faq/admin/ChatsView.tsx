@@ -455,6 +455,15 @@ function MobileChatPager({
         Use as setas do teclado esquerda e direita para trocar de sessão, ou os botões Anterior e Próxima.
       </p>
       <div
+        className="sr-only"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        data-testid="session-change-announcer"
+      >
+        {announcement}
+      </div>
+      <div
         ref={containerRef}
         className="flex min-h-0 flex-1 snap-x snap-mandatory overflow-x-auto overflow-y-hidden overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
