@@ -821,10 +821,11 @@ function AnalysisDrawer({
       aria-modal="true"
       aria-label="Análise da resposta"
       tabIndex={-1}
+      onClick={(e) => e.stopPropagation()}
       className={cn(
         "flex shrink-0 flex-col overflow-hidden bg-[var(--surface)]",
         overlay
-          ? "h-full w-full"
+          ? "h-full w-full max-w-2xl rounded-xl shadow-2xl"
           : "w-[440px] border-l border-border",
       )}
     >
