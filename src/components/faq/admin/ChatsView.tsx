@@ -81,8 +81,16 @@ export function ChatsView() {
     lastAnalysisButtonRef.current = el;
   };
 
+  const [analysisAnnouncement, setAnalysisAnnouncement] = useState("");
   const closeAnalysis = useCallback(() => {
     setAnalysisMsgId(null);
+    // Toggle a trailing zero-width space so identical messages are still
+    // re-announced by screen readers.
+    setAnalysisAnnouncement((prev) =>
+      prev.endsWith("\u200B")
+        ? "Análise da resposta fechada."
+        : "Análise da resposta fechada.\u200B",
+    );
     setTimeout(() => {
       lastAnalysisButtonRef.current?.focus();
     }, 0);
