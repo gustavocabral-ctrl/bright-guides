@@ -75,6 +75,31 @@ export function ChatsView() {
   const analysisIndex = analysisMessages.findIndex((m) => m.id === analysisMsgId);
   const analysisMsg = analysisIndex >= 0 ? analysisMessages[analysisIndex] : null;
 
+  const lastAnalysisButtonRef = useRef<HTMLButtonElement | null>(null);
+  const setAnalysisTriggerRef = (el: HTMLButtonElement | null) => {
+    lastAnalysisButtonRef.current = el;
+  };
+
+  const closeAnalysis = useCallback(() => {
+    setAnalysisMsgId(null);
+    setTimeout(() => {
+      lastAnalysisButtonRef.current?.focus();
+    }, 0);
+  }, []);
+
+  // Close analysis overlay/drawer on Escape
+  useEffect(() => {
+    if (!analysisMsgId) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        closeAnalysis();
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [analysisMsgId, closeAnalysis]);
+
   const removeChip = (key: string) => {
     const next: Record<string, string | undefined> = { ...search };
     delete next[key];
