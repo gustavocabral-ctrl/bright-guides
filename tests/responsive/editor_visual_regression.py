@@ -155,7 +155,8 @@ async def run(update: bool, threshold: float) -> int:
                     baseline = BASELINE_DIR / f"{state}__{vp.name}.png"
                     diff_out = DIFF_DIR / f"{state}__{vp.name}.diff.png"
                     if update or not baseline.exists():
-                        actual.replace(baseline)
+                        import shutil as _sh
+                        _sh.move(str(actual), str(baseline))
                         report.append(f"{'BASELINE' if update else 'NEW':8s} [{vp.name:7s}] {state}")
                         continue
                     ratio, mismatch = compare(baseline, actual, diff_out)
