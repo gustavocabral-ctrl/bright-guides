@@ -258,7 +258,9 @@ export function ChatsView() {
                 key={m.id}
                 message={m}
                 onOpenAnalysis={
-                  m.analysis ? () => setAnalysisMsgId(m.id) : undefined
+                  m.analysis && m.feedback?.value === "negative"
+                    ? () => setAnalysisMsgId(m.id)
+                    : undefined
                 }
                 setAnalysisTriggerRef={setAnalysisTriggerRef}
                 active={m.id === analysisMsgId}
