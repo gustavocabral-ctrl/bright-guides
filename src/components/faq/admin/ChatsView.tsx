@@ -775,7 +775,7 @@ function AnalysisDrawer({
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onClose} aria-label="Fechar">
+          <Button ref={closeBtnRef} variant="ghost" size="icon" className="h-7 w-7" onClick={onClose} aria-label="Fechar análise">
             <X className="h-4 w-4" />
           </Button>
         </div>
