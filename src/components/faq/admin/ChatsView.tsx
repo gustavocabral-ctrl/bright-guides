@@ -838,13 +838,17 @@ function AnalysisDrawer({
     };
   }, []);
 
+  const dialogTitleId = `analysis-title-${message.id}`;
+  const dialogDescId = `analysis-desc-${message.id}`;
+
   return (
     <aside
       ref={asideRef}
       data-testid="analysis-drawer"
       role="dialog"
       aria-modal="true"
-      aria-label="Análise da resposta"
+      aria-labelledby={dialogTitleId}
+      aria-describedby={dialogDescId}
       tabIndex={-1}
       onClick={(e) => e.stopPropagation()}
       className={cn(
@@ -856,13 +860,26 @@ function AnalysisDrawer({
     >
       <div className="flex items-center justify-between border-b border-border px-4 py-3">
         <div>
-          <p className="text-sm font-semibold">Análise da resposta</p>
+          <p id={dialogTitleId} className="text-sm font-semibold">
+            Análise da resposta
+          </p>
           <p className="text-[11px] text-muted-foreground">
             Resposta {index + 1} de {total}
           </p>
+          <p id={dialogDescId} className="sr-only">
+            Painel com detalhamento técnico da resposta gerada pela IA. Use Tab para navegar
+            entre as seções. Pressione Esc ou ative o botão Fechar para sair.
+          </p>
         </div>
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onPrev} disabled={index <= 0}>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            onClick={onPrev}
+            disabled={index <= 0}
+            aria-label="Análise anterior"
+          >
             <ChevronLeft className="h-4 w-4" />
           </Button>
           <Button
@@ -871,10 +888,18 @@ function AnalysisDrawer({
             className="h-7 w-7"
             onClick={onNext}
             disabled={index >= total - 1}
+            aria-label="Próxima análise"
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
-          <Button ref={closeBtnRef} variant="ghost" size="icon" className="h-7 w-7" onClick={onClose} aria-label="Fechar análise">
+          <Button
+            ref={closeBtnRef}
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            onClick={onClose}
+            aria-label="Fechar análise"
+          >
             <X className="h-4 w-4" />
           </Button>
         </div>
