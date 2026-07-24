@@ -72,9 +72,25 @@ export function DocumentoView() {
   const [editing, setEditing] = useState(false);
   const [catDialogOpen, setCatDialogOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const readRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => setMounted(true), []);
+
+  // Deterministic loading/error states for visual regression / debugging.
+  // Pin via URL params: ?saveState=loading | ?saveState=error
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const s = new URLSearchParams(window.location.search).get("saveState");
+    if (s === "loading") {
+      setSaving(true);
+      setSaveError(null);
+    } else if (s === "error") {
+      setSaving(false);
+      setSaveError("Não foi possível salvar. Verifique sua conexão e tente novamente.");
+    }
+  }, [selected?.id]);
 
   useEffect(() => {
     setEditing(false);
