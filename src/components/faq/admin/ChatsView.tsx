@@ -300,7 +300,8 @@ export function ChatsView() {
       {analysisMsg && (
         <div
           data-testid="analysis-overlay"
-          className="fixed inset-0 z-50 flex flex-col bg-[var(--surface)] md:hidden"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm md:hidden"
+          onClick={closeAnalysis}
         >
           <AnalysisDrawer
             message={analysisMsg}
@@ -820,10 +821,11 @@ function AnalysisDrawer({
       aria-modal="true"
       aria-label="Análise da resposta"
       tabIndex={-1}
+      onClick={(e) => e.stopPropagation()}
       className={cn(
         "flex shrink-0 flex-col overflow-hidden bg-[var(--surface)]",
         overlay
-          ? "h-full w-full"
+          ? "h-full w-full max-w-2xl rounded-xl shadow-2xl"
           : "w-[440px] border-l border-border",
       )}
     >
