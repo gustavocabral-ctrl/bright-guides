@@ -107,6 +107,38 @@ async def run_viewport(width: int, height: int, label: str) -> None:
             if await page.locator("[data-testid='analysis-overlay']").count() != 0:
                 FAILURES.append(f"{label}: overlay did not close on backdrop click")
 
+            # Reopen the overlay to test focus trap.
+            await btn.click()
+            await page.wait_for_timeout(500)
+            try:
+                await page.wait_for_selector("[data-testid='analysis-overlay']", state="visible", timeout=3000)
+            except Exception:
+                FAILURES.append(f"{label}: overlay did not reopen for focus-trap test")
+                await browser.close()
+                return
+
+            def focused_in_drawer_js():
+                return """
+                () => {
+                    const drawer = document.querySelector("[data-testid='analysis-overlay'] [data-testid='analysis-drawer']");
+                    return !!(drawer && drawer.contains(document.activeElement));
+                }
+                """
+
+            if not await page.evaluate(focused_in_drawer_js()):
+                FAILURES.append(f"{label}: initial focus is not inside the drawer")
+
+            for _ in range(12):
+                await page.keyboard.press("Tab")
+                await page.wait_for_timeout(50)
+
+            if not await page.evaluate(focused_in_drawer_js()):
+                active = await page.evaluate("() => document.activeElement?.outerHTML?.slice(0, 80) || '(none)'")
+                FAILURES.append(f"{label}: Tab moved focus outside the drawer (active: {active})")
+
+            await page.keyboard.press("Escape")
+            await page.wait_for_timeout(500)
+
         await browser.close()
 
 
