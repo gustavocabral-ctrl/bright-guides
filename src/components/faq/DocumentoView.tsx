@@ -334,6 +334,31 @@ export function DocumentoView() {
           )}
         </div>
 
+        {/* Save error banner */}
+        {saveError && (editing || isEmpty) && (
+          <div
+            role="alert"
+            aria-live="polite"
+            data-testid="save-error-banner"
+            className="mx-8 mt-4 flex items-start gap-3 rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+          >
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+            <div className="flex-1">
+              <p className="font-medium">Erro ao salvar</p>
+              <p className="text-destructive/80">{saveError}</p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleSave}
+              disabled={saving || isEmpty}
+              className="border-destructive/40 text-destructive hover:bg-destructive/10"
+            >
+              <RotateCw className="mr-1.5 h-4 w-4" /> Tentar novamente
+            </Button>
+          </div>
+        )}
+
         {/* Footer actions */}
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border bg-muted/30 px-8 py-4">
           <div className="flex gap-2">
@@ -343,13 +368,13 @@ export function DocumentoView() {
                   variant="ghost"
                   size="sm"
                   onClick={() => !isEmpty && setEditing(false)}
-                  disabled={isEmpty}
+                  disabled={isEmpty || saving}
                 >
                   <X className="mr-1.5 h-4 w-4" /> Cancelar
                 </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" disabled={saving}>
                       <Plus className="mr-1.5 h-4 w-4" /> Adicionar bloco
                     </Button>
                   </DropdownMenuTrigger>
@@ -373,12 +398,25 @@ export function DocumentoView() {
             )}
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" disabled={saving}>
               <Send className="mr-1.5 h-4 w-4" /> Publicar FAQ
             </Button>
             {(editing || isEmpty) && (
-              <Button size="sm" onClick={() => setEditing(false)} disabled={isEmpty}>
-                <Save className="mr-1.5 h-4 w-4" /> Salvar alterações
+              <Button
+                size="sm"
+                onClick={handleSave}
+                disabled={isEmpty || saving}
+                data-testid="save-button"
+              >
+                {saving ? (
+                  <>
+                    <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> Salvando...
+                  </>
+                ) : (
+                  <>
+                    <Save className="mr-1.5 h-4 w-4" /> Salvar alterações
+                  </>
+                )}
               </Button>
             )}
           </div>
