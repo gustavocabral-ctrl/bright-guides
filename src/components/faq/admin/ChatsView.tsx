@@ -109,6 +109,34 @@ export function ChatsView() {
     return () => window.removeEventListener("keydown", handler);
   }, [analysisMsgId, closeAnalysis]);
 
+  // Lock page scroll while the mobile fullscreen analysis overlay is open,
+  // then restore the previous overflow values on close/unmount. Desktop uses
+  // a side panel that doesn't need scroll locking, but the media query is
+  // evaluated at effect time so we only lock when the overlay is actually
+  // covering the viewport.
+  useEffect(() => {
+    if (!analysisMsgId) return;
+    if (typeof window === "undefined") return;
+    const isMobile = window.matchMedia("(max-width: 767px)").matches;
+    if (!isMobile) return;
+
+    const body = document.body;
+    const html = document.documentElement;
+    const prevBodyOverflow = body.style.overflow;
+    const prevHtmlOverflow = html.style.overflow;
+    const prevBodyOverscroll = body.style.overscrollBehavior;
+
+    body.style.overflow = "hidden";
+    html.style.overflow = "hidden";
+    body.style.overscrollBehavior = "contain";
+
+    return () => {
+      body.style.overflow = prevBodyOverflow;
+      html.style.overflow = prevHtmlOverflow;
+      body.style.overscrollBehavior = prevBodyOverscroll;
+    };
+  }, [analysisMsgId]);
+
   const removeChip = (key: string) => {
     const next: Record<string, string | undefined> = { ...search };
     delete next[key];
