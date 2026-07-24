@@ -703,9 +703,51 @@ function AnalysisDrawer({
   overlay?: boolean;
 }) {
   const a = message.analysis!;
+  const asideRef = useRef<HTMLElement | null>(null);
+  const closeBtnRef = useRef<HTMLButtonElement | null>(null);
+
+  // Initial focus on the close button when the drawer/overlay opens
+  useEffect(() => {
+    const t = setTimeout(() => closeBtnRef.current?.focus(), 0);
+    return () => clearTimeout(t);
+  }, [message.id]);
+
+  // Focus trap: cycle Tab / Shift+Tab within the drawer
+  useEffect(() => {
+    const node = asideRef.current;
+    if (!node) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key !== "Tab") return;
+      const focusables = node.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])',
+      );
+      const visible = Array.from(focusables).filter(
+        (el) => !el.hasAttribute("disabled") && el.offsetParent !== null,
+      );
+      if (visible.length === 0) return;
+      const first = visible[0];
+      const last = visible[visible.length - 1];
+      const active = document.activeElement as HTMLElement | null;
+      if (e.shiftKey && (active === first || !node.contains(active))) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && active === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+    node.addEventListener("keydown", handler);
+    return () => node.removeEventListener("keydown", handler);
+  }, []);
+
   return (
     <aside
+      ref={asideRef}
       data-testid="analysis-drawer"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Análise da resposta"
+      tabIndex={-1}
       className={cn(
         "flex shrink-0 flex-col overflow-hidden bg-[var(--surface)]",
         overlay
