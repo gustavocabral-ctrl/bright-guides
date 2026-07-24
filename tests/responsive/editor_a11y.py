@@ -66,10 +66,10 @@ def contrast_ratio(fg_css: str, bg_css: str) -> float:
     fg = _parse_color(fg_css)
     bg = _parse_color(bg_css)
     if bg[3] < 1:
-        # Assume white page underneath if bg is translucent.
-        bg = _blend(bg, (255.0, 255.0, 255.0, 1.0)) + (1.0,)  # type: ignore
-    blended = _blend(fg, bg)
-    l1 = _relative_luminance(blended)
+        blended_bg = _blend(bg, (255.0, 255.0, 255.0, 1.0))
+        bg = (blended_bg[0], blended_bg[1], blended_bg[2], 1.0)
+    blended_fg = _blend(fg, bg)
+    l1 = _relative_luminance(blended_fg)
     l2 = _relative_luminance((bg[0], bg[1], bg[2]))
     hi, lo = max(l1, l2), min(l1, l2)
     return (hi + 0.05) / (lo + 0.05)
