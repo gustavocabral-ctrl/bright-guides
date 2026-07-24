@@ -147,8 +147,8 @@ export function ChatsView() {
         )}
       </div>
 
-      {/* 3 panels */}
-      <div className="flex min-h-0 flex-1">
+      {/* Desktop: 3 panels */}
+      <div className="hidden min-h-0 flex-1 md:flex">
         {/* Sessions list */}
         <aside className="w-[340px] shrink-0 overflow-y-auto border-r border-border bg-[var(--surface)]">
           {filtered.length === 0 ? (
@@ -192,7 +192,7 @@ export function ChatsView() {
           </div>
         </section>
 
-        {/* Analysis drawer */}
+        {/* Analysis drawer (side panel on desktop) */}
         {analysisMsg && (
           <AnalysisDrawer
             message={analysisMsg}
@@ -209,6 +209,176 @@ export function ChatsView() {
             }
           />
         )}
+      </div>
+
+      {/* Mobile: horizontal pager (swipe = change session, vertical scroll = conversation) */}
+      <MobileChatPager
+        sessions={filtered.length > 0 ? filtered : []}
+        selectedId={selectedId}
+        onSelect={(id) => {
+          setSelectedId(id);
+          setAnalysisMsgId(null);
+        }}
+        onOpenAnalysis={(id) => setAnalysisMsgId(id)}
+        analysisMsgId={analysisMsgId}
+      />
+
+      {/* Mobile: fullscreen analysis overlay */}
+      {analysisMsg && (
+        <div className="fixed inset-0 z-50 flex flex-col bg-[var(--surface)] md:hidden">
+          <AnalysisDrawer
+            message={analysisMsg}
+            index={analysisIndex}
+            total={analysisMessages.length}
+            onClose={() => setAnalysisMsgId(null)}
+            onPrev={() =>
+              setAnalysisMsgId(analysisMessages[Math.max(0, analysisIndex - 1)].id)
+            }
+            onNext={() =>
+              setAnalysisMsgId(
+                analysisMessages[Math.min(analysisMessages.length - 1, analysisIndex + 1)].id,
+              )
+            }
+            overlay
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MobileChatPager({
+  sessions,
+  selectedId,
+  onSelect,
+  onOpenAnalysis,
+  analysisMsgId,
+}: {
+  sessions: ChatSession[];
+  selectedId: string;
+  onSelect: (id: string) => void;
+  onOpenAnalysis: (id: string) => void;
+  analysisMsgId: string | null;
+}) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const slideRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const selectedIndex = Math.max(
+    0,
+    sessions.findIndex((s) => s.id === selectedId),
+  );
+
+  // Sync selected -> scroll position (when list changes or user picks elsewhere)
+  useEffect(() => {
+    const el = slideRefs.current.get(selectedId);
+    if (el && containerRef.current) {
+      const desiredLeft = el.offsetLeft;
+      if (Math.abs(containerRef.current.scrollLeft - desiredLeft) > 4) {
+        containerRef.current.scrollTo({ left: desiredLeft, behavior: "auto" });
+      }
+    }
+  }, [selectedId, sessions.length]);
+
+  // Track horizontal snap position -> update selected session
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    let raf = 0;
+    const handler = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        const center = container.scrollLeft + container.clientWidth / 2;
+        let bestId = sessions[0]?.id;
+        let bestDist = Infinity;
+        sessions.forEach((s) => {
+          const el = slideRefs.current.get(s.id);
+          if (!el) return;
+          const elCenter = el.offsetLeft + el.clientWidth / 2;
+          const d = Math.abs(elCenter - center);
+          if (d < bestDist) {
+            bestDist = d;
+            bestId = s.id;
+          }
+        });
+        if (bestId && bestId !== selectedId) onSelect(bestId);
+      });
+    };
+    container.addEventListener("scroll", handler, { passive: true });
+    return () => {
+      container.removeEventListener("scroll", handler);
+      cancelAnimationFrame(raf);
+    };
+  }, [sessions, selectedId, onSelect]);
+
+  if (sessions.length === 0) {
+    return (
+      <div className="flex min-h-0 flex-1 items-center justify-center p-6 text-sm text-muted-foreground md:hidden">
+        Nenhuma sessão encontrada para os filtros atuais.
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex min-h-0 flex-1 flex-col md:hidden">
+      {/* Pager position indicator */}
+      <div className="flex items-center justify-center gap-1.5 border-b border-border bg-[var(--surface)] px-4 py-2">
+        <span className="text-[11px] text-muted-foreground">
+          Sessão {selectedIndex + 1} de {sessions.length} · arraste para trocar
+        </span>
+      </div>
+      <div
+        ref={containerRef}
+        className="flex min-h-0 flex-1 snap-x snap-mandatory overflow-x-auto overflow-y-hidden overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
+        {sessions.map((s) => (
+          <div
+            key={s.id}
+            ref={(el) => {
+              if (el) slideRefs.current.set(s.id, el);
+              else slideRefs.current.delete(s.id);
+            }}
+            className="flex w-full shrink-0 snap-center snap-always flex-col overflow-hidden"
+            style={{ width: "100%" }}
+          >
+            {/* Session header (top) */}
+            <div className="border-b border-border bg-[var(--surface)] px-4 py-3">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[11px] font-medium text-muted-foreground">
+                  Sessão #{s.number}
+                </span>
+                <span className="text-[11px] text-muted-foreground">
+                  {new Date(s.startedAt).toLocaleDateString("pt-BR")}
+                </span>
+              </div>
+              <h2 className="mt-0.5 truncate text-sm font-semibold">{s.title}</h2>
+              <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[10px]">
+                <Badge variant="outline" className="h-5 px-1.5">
+                  {s.primarySubject}
+                </Badge>
+                <Badge variant="outline" className="h-5 px-1.5 text-muted-foreground">
+                  {s.messageCount} msgs
+                </Badge>
+                <span className="inline-flex items-center gap-1 text-emerald-700">
+                  <ThumbsUp className="h-3 w-3" /> {s.feedbackSummary.positive}
+                </span>
+                <span className="inline-flex items-center gap-1 text-red-700">
+                  <ThumbsDown className="h-3 w-3" /> {s.feedbackSummary.negative}
+                </span>
+              </div>
+            </div>
+
+            {/* Conversation (scrolls vertically) */}
+            <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-y-contain bg-[var(--surface-muted)] px-4 py-4">
+              {s.messages.map((m) => (
+                <MessageBubble
+                  key={m.id}
+                  message={m}
+                  onOpenAnalysis={m.analysis ? () => onOpenAnalysis(m.id) : undefined}
+                  active={m.id === analysisMsgId}
+                />
+              ))}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
