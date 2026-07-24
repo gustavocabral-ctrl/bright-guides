@@ -309,6 +309,53 @@ function MobileChatPager({
     };
   }, [sessions, selectedId, onSelect]);
 
+  const goTo = (idx: number) => {
+    const clamped = Math.max(0, Math.min(sessions.length - 1, idx));
+    const target = sessions[clamped];
+    if (!target) return;
+    const el = slideRefs.current.get(target.id);
+    if (el && containerRef.current) {
+      containerRef.current.scrollTo({ left: el.offsetLeft, behavior: "smooth" });
+    }
+    onSelect(target.id);
+  };
+  const goPrev = () => goTo(selectedIndex - 1);
+  const goNext = () => goTo(selectedIndex + 1);
+
+  // Keyboard shortcuts: ← / → to change session, Home / End for first/last.
+  // Disabled when focus is inside an editable field so typing isn't hijacked.
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null;
+      if (t) {
+        const tag = t.tagName;
+        if (
+          tag === "INPUT" ||
+          tag === "TEXTAREA" ||
+          tag === "SELECT" ||
+          t.isContentEditable
+        )
+          return;
+      }
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        goPrev();
+      } else if (e.key === "ArrowRight") {
+        e.preventDefault();
+        goNext();
+      } else if (e.key === "Home") {
+        e.preventDefault();
+        goTo(0);
+      } else if (e.key === "End") {
+        e.preventDefault();
+        goTo(sessions.length - 1);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedIndex, sessions.length]);
+
   if (sessions.length === 0) {
     return (
       <div className="flex min-h-0 flex-1 items-center justify-center p-6 text-sm text-muted-foreground md:hidden">
@@ -317,14 +364,51 @@ function MobileChatPager({
     );
   }
 
+  const atStart = selectedIndex <= 0;
+  const atEnd = selectedIndex >= sessions.length - 1;
+
   return (
-    <div className="flex min-h-0 flex-1 flex-col md:hidden">
-      {/* Pager position indicator */}
-      <div className="flex items-center justify-center gap-1.5 border-b border-border bg-[var(--surface)] px-4 py-2">
-        <span className="text-[11px] text-muted-foreground">
-          Sessão {selectedIndex + 1} de {sessions.length} · arraste para trocar
+    <div
+      className="flex min-h-0 flex-1 flex-col md:hidden"
+      role="region"
+      aria-roledescription="carrossel de sessões"
+      aria-label="Sessões de chat"
+    >
+      {/* Pager controls + position indicator */}
+      <div className="flex items-center justify-between gap-2 border-b border-border bg-[var(--surface)] px-3 py-2">
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-8 gap-1 px-2 text-xs"
+          onClick={goPrev}
+          disabled={atStart}
+          aria-label="Sessão anterior"
+        >
+          <ChevronLeft className="h-4 w-4" />
+          Anterior
+        </Button>
+        <span
+          className="text-[11px] text-muted-foreground"
+          aria-live="polite"
+          aria-atomic="true"
+        >
+          Sessão {selectedIndex + 1} de {sessions.length}
         </span>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-8 gap-1 px-2 text-xs"
+          onClick={goNext}
+          disabled={atEnd}
+          aria-label="Próxima sessão"
+        >
+          Próxima
+          <ChevronRight className="h-4 w-4" />
+        </Button>
       </div>
+      <p className="sr-only">
+        Use as setas do teclado esquerda e direita para trocar de sessão, ou os botões Anterior e Próxima.
+      </p>
       <div
         ref={containerRef}
         className="flex min-h-0 flex-1 snap-x snap-mandatory overflow-x-auto overflow-y-hidden overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
