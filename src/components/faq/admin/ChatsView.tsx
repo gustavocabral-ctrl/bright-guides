@@ -942,7 +942,12 @@ function AnalysisDrawer({
         </div>
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
-        <Accordion type="multiple" defaultValue={["q", "r", "e"]} className="space-y-1">
+        <Accordion
+          type="multiple"
+          defaultValue={["q", "r", "e"]}
+          onValueChange={handleAccordionChange}
+          className="space-y-1"
+        >
           <AccordionItem value="q" className="rounded-md border border-border px-3">
             <AccordionTrigger className="text-sm">Entendimento da pergunta</AccordionTrigger>
             <AccordionContent className="space-y-2 text-xs">
