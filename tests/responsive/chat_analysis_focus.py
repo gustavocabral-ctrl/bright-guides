@@ -51,6 +51,31 @@ async def run_viewport(width: int, height: int, label: str) -> None:
                 await browser.close()
                 return
 
+        # Verify the dialog has proper ARIA attributes for screen readers.
+        drawer = page.locator("[data-testid='analysis-drawer']").filter(visible=True)
+        attrs = await drawer.evaluate("""
+            (el) => ({
+                role: el.getAttribute('role'),
+                ariaModal: el.getAttribute('aria-modal'),
+                labelledBy: el.getAttribute('aria-labelledby'),
+                describedBy: el.getAttribute('aria-describedby'),
+            })
+        """)
+        if attrs.get("role") != "dialog":
+            FAILURES.append(f"{label}: analysis panel is missing role='dialog'")
+        if attrs.get("ariaModal") != "true":
+            FAILURES.append(f"{label}: analysis panel is missing aria-modal='true'")
+        if not attrs.get("labelledBy"):
+            FAILURES.append(f"{label}: analysis panel is missing aria-labelledby")
+        if not attrs.get("describedBy"):
+            FAILURES.append(f"{label}: analysis panel is missing aria-describedby")
+
+        # Ensure the referenced label and description elements exist.
+        if attrs.get("labelledBy") and not await page.locator(f"#{attrs['labelledBy']}").count():
+            FAILURES.append(f"{label}: aria-labelledby target does not exist")
+        if attrs.get("describedBy") and not await page.locator(f"#{attrs['describedBy']}").count():
+            FAILURES.append(f"{label}: aria-describedby target does not exist")
+
         await page.screenshot(path=str(SCREENSHOTS / f"{label}_open.png"))
 
         # Press Escape to close.
