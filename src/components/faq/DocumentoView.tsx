@@ -153,6 +153,26 @@ export function DocumentoView() {
     updateBlocos(selected.id, blocos.filter((b) => b.id !== id));
   };
 
+  const handleSave = async () => {
+    if (isEmpty || saving) return;
+    setSaveError(null);
+    setSaving(true);
+    try {
+      // Persistência é local; simulamos latência mínima para permitir feedback
+      // consistente e reproduzir o estado de "salvando" no editor.
+      await new Promise((r) => setTimeout(r, 600));
+      setSaving(false);
+      setEditing(false);
+    } catch (err) {
+      setSaving(false);
+      setSaveError(
+        err instanceof Error
+          ? err.message
+          : "Não foi possível salvar. Tente novamente.",
+      );
+    }
+  };
+
   const formatted = mounted
     ? new Date(selected.updatedAt).toLocaleString("pt-BR", {
         day: "2-digit",
