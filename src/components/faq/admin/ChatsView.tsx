@@ -483,6 +483,7 @@ function MobileChatPager({
                   key={m.id}
                   message={m}
                   onOpenAnalysis={m.analysis ? () => onOpenAnalysis(m.id) : undefined}
+                  setAnalysisTriggerRef={setAnalysisTriggerRef}
                   active={m.id === analysisMsgId}
                 />
               ))}
@@ -592,10 +593,12 @@ function MessageBubble({
   message,
   onOpenAnalysis,
   active,
+  setAnalysisTriggerRef,
 }: {
   message: ChatMessage;
   onOpenAnalysis?: () => void;
   active: boolean;
+  setAnalysisTriggerRef?: (el: HTMLButtonElement | null) => void;
 }) {
   const isUser = message.role === "user";
   const fb = message.feedback;
@@ -661,7 +664,10 @@ function MessageBubble({
                 variant="outline"
                 size="sm"
                 className="ml-auto h-7 text-xs"
-                onClick={onOpenAnalysis}
+                onClick={(e) => {
+                  setAnalysisTriggerRef?.(e.currentTarget);
+                  onOpenAnalysis();
+                }}
               >
                 Análise da resposta
               </Button>
