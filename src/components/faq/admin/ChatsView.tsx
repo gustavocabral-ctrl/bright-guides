@@ -1081,6 +1081,15 @@ function AnalysisDrawer({
           </AccordionItem>
         </Accordion>
       </div>
+      <div
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        className="sr-only"
+        data-testid="analysis-drawer-announcer"
+      >
+        {liveMessage}
+      </div>
     </aside>
   );
 }
