@@ -247,6 +247,7 @@ export function ChatsView() {
         }}
         onOpenAnalysis={(id) => setAnalysisMsgId(id)}
         analysisMsgId={analysisMsgId}
+        setAnalysisTriggerRef={setAnalysisTriggerRef}
       />
 
       {/* Mobile: fullscreen analysis overlay */}
