@@ -294,6 +294,7 @@ function MobileChatPager({
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const slideRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const reducedMotion = useReducedMotion();
   const selectedIndex = Math.max(
     0,
     sessions.findIndex((s) => s.id === selectedId),
