@@ -15,6 +15,8 @@ import {
   Video as VideoIcon,
   ArrowUp,
   ArrowDown,
+  Loader2,
+  RotateCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
