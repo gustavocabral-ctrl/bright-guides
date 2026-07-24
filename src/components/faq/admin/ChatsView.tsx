@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import { useSearch, useNavigate, Link } from "@tanstack/react-router";
 import {
   ChevronLeft,
