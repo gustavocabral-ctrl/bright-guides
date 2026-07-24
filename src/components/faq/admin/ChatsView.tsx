@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import { useSearch, useNavigate, Link } from "@tanstack/react-router";
 import {
   ChevronLeft,
@@ -294,6 +295,7 @@ function MobileChatPager({
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const slideRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const reducedMotion = useReducedMotion();
   const selectedIndex = Math.max(
     0,
     sessions.findIndex((s) => s.id === selectedId),
@@ -359,7 +361,10 @@ function MobileChatPager({
     if (!target) return;
     const el = slideRefs.current.get(target.id);
     if (el && containerRef.current) {
-      containerRef.current.scrollTo({ left: el.offsetLeft, behavior: "smooth" });
+      containerRef.current.scrollTo({
+        left: el.offsetLeft,
+        behavior: reducedMotion ? "auto" : "smooth",
+      });
     }
     onSelect(target.id);
     announce(clamped);

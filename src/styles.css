@@ -159,3 +159,18 @@
   }
 }
 
+/* Respect users who requested reduced motion at the OS level.
+ * Neutralises tailwindcss-animate keyframes, transitions and smooth
+ * scrolling (including the mobile chat pager's snap animation). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+
