@@ -52,7 +52,7 @@ async def run_viewport(width: int, height: int, label: str) -> None:
                 return
 
         # Verify the dialog has proper ARIA attributes for screen readers.
-        drawer = page.locator("[data-testid='analysis-drawer']")
+        drawer = page.locator("[data-testid='analysis-drawer']").filter(visible=True)
         attrs = await drawer.evaluate("""
             (el) => ({
                 role: el.getAttribute('role'),
