@@ -348,15 +348,18 @@ export function DocumentoView() {
         {/* Save error banner */}
         {saveError && (editing || isEmpty) && (
           <div
+            ref={errorBannerRef}
             role="alert"
-            aria-live="polite"
+            aria-live="assertive"
+            aria-atomic="true"
+            tabIndex={-1}
             data-testid="save-error-banner"
-            className="mx-8 mt-4 flex items-start gap-3 rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+            className="mx-8 mt-4 flex items-start gap-3 rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive outline-none focus-visible:ring-2 focus-visible:ring-destructive/60"
           >
-            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+            <AlertCircle aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0" />
             <div className="flex-1">
               <p className="font-medium">Erro ao salvar</p>
-              <p className="text-destructive/80">{saveError}</p>
+              <p className="text-destructive/90">{saveError}</p>
             </div>
             <Button
               variant="outline"
@@ -365,10 +368,22 @@ export function DocumentoView() {
               disabled={saving || isEmpty}
               className="border-destructive/40 text-destructive hover:bg-destructive/10"
             >
-              <RotateCw className="mr-1.5 h-4 w-4" /> Tentar novamente
+              <RotateCw aria-hidden="true" className="mr-1.5 h-4 w-4" /> Tentar novamente
             </Button>
           </div>
         )}
+
+        {/* Polite status region announcing save progress to assistive tech */}
+        <div
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+          data-testid="save-status-region"
+          className="sr-only"
+        >
+          {saving ? "Salvando alterações do documento..." : ""}
+        </div>
+
 
         {/* Footer actions */}
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border bg-muted/30 px-8 py-4">
