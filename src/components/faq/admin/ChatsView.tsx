@@ -785,18 +785,24 @@ function AnalysisDrawer({
     return () => clearTimeout(t);
   }, [message.id]);
 
-  // Focus trap: cycle Tab / Shift+Tab within the drawer
+  // Focus trap: keep Tab / Shift+Tab cycling inside the drawer and recapture
+  // focus if it leaves the drawer (e.g. via mouse or programmatic moves).
   useEffect(() => {
     const node = asideRef.current;
     if (!node) return;
-    const handler = (e: KeyboardEvent) => {
-      if (e.key !== "Tab") return;
+
+    const getVisibleFocusables = () => {
       const focusables = node.querySelectorAll<HTMLElement>(
         'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])',
       );
-      const visible = Array.from(focusables).filter(
+      return Array.from(focusables).filter(
         (el) => !el.hasAttribute("disabled") && el.offsetParent !== null,
       );
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== "Tab") return;
+      const visible = getVisibleFocusables();
       if (visible.length === 0) return;
       const first = visible[0];
       const last = visible[visible.length - 1];
@@ -804,13 +810,32 @@ function AnalysisDrawer({
       if (e.shiftKey && (active === first || !node.contains(active))) {
         e.preventDefault();
         last.focus();
-      } else if (!e.shiftKey && active === last) {
+      } else if (!e.shiftKey && (active === last || !node.contains(active))) {
         e.preventDefault();
         first.focus();
       }
     };
-    node.addEventListener("keydown", handler);
-    return () => node.removeEventListener("keydown", handler);
+
+    const handleFocusOut = (e: FocusEvent) => {
+      const next = e.relatedTarget as HTMLElement | null;
+      // If focus moved to another element inside the drawer, do nothing.
+      if (next && node.contains(next)) return;
+      const visible = getVisibleFocusables();
+      if (visible.length === 0) return;
+      // Recapture focus after the browser commits the move.
+      setTimeout(() => {
+        if (!node.contains(document.activeElement)) {
+          visible[0].focus();
+        }
+      }, 0);
+    };
+
+    node.addEventListener("keydown", handleKeyDown);
+    node.addEventListener("focusout", handleFocusOut);
+    return () => {
+      node.removeEventListener("keydown", handleKeyDown);
+      node.removeEventListener("focusout", handleFocusOut);
+    };
   }, []);
 
   return (
