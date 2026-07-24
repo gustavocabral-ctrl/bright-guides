@@ -139,7 +139,7 @@ async def check_loading(page, results: list[dict], label: str) -> None:
 
     # Contrast of the visible "Salvando..." label vs button background.
     label_span = save_btn.locator("span").first
-    fg = await label_span.evaluate("el => getComputedStyle(el).color")
+    fg = await _color_of(label_span)
     bg = await _effective_bg(save_btn)
     ratio = contrast_ratio(fg, bg)
 
@@ -177,12 +177,12 @@ async def check_error(page, results: list[dict], label: str) -> None:
 
     # Contrast: title paragraph vs banner background.
     title = banner.locator("p.font-medium").first
-    fg_title = await title.evaluate("el => getComputedStyle(el).color")
+    fg_title = await _color_of(title)
     bg = await _effective_bg(banner)
     ratio_title = contrast_ratio(fg_title, bg)
 
     body = banner.locator("p").nth(1)
-    fg_body = await body.evaluate("el => getComputedStyle(el).color")
+    fg_body = await _color_of(body)
     ratio_body = contrast_ratio(fg_body, bg)
 
     # Retry button has accessible name.
