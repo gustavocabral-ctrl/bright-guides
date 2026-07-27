@@ -150,6 +150,39 @@ export function FaqTopbar() {
     </div>
   );
 
+  const viewToggle = isDoc && (
+    <div
+      role="tablist"
+      aria-label="Modo da tela do editor"
+      className="inline-flex items-center rounded-lg border border-border bg-[var(--surface)] p-0.5"
+    >
+      <button
+        type="button"
+        role="tab"
+        aria-selected={!chatOpen}
+        onClick={() => setChatOpen(false)}
+        className={cn(
+          "inline-flex h-8 items-center gap-1.5 rounded-md px-2.5 text-xs font-medium transition-colors",
+          !chatOpen ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
+        )}
+      >
+        <FileText className="h-3.5 w-3.5" /> Documento FAQ
+      </button>
+      <button
+        type="button"
+        role="tab"
+        aria-selected={chatOpen}
+        onClick={() => setChatOpen(true)}
+        className={cn(
+          "inline-flex h-8 items-center gap-1.5 rounded-md px-2.5 text-xs font-medium transition-colors",
+          chatOpen ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
+        )}
+      >
+        <MessageSquare className="h-3.5 w-3.5" /> Chat Suporte
+      </button>
+    </div>
+  );
+
   return (
     <header className="border-b border-border bg-[var(--surface)] px-3 py-3 sm:px-6">
       {/* Desktop */}
@@ -163,6 +196,7 @@ export function FaqTopbar() {
           </Button>
           {navLinks}
         </div>
+        {viewToggle}
       </div>
 
       {/* Mobile / tablet */}
