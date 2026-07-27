@@ -3,6 +3,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import {
   BarChart3,
   BookOpen,
+  Lightbulb,
   MessageSquare,
   MessagesSquare,
   Users,

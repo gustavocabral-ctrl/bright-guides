@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as UsuariosRouteImport } from './routes/usuarios'
+import { Route as MelhoriasRouteImport } from './routes/melhorias'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as EstatisticasRouteImport } from './routes/estatisticas'
 import { Route as ChatsRouteImport } from './routes/chats'
@@ -25,6 +26,11 @@ import { Route as FaqAdminChatsRouteImport } from './routes/faq.admin.chats'
 const UsuariosRoute = UsuariosRouteImport.update({
   id: '/usuarios',
   path: '/usuarios',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MelhoriasRoute = MelhoriasRouteImport.update({
+  id: '/melhorias',
+  path: '/melhorias',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FaqRoute = FaqRouteImport.update({
@@ -89,6 +95,7 @@ export interface FileRoutesByFullPath {
   '/chats': typeof ChatsRoute
   '/estatisticas': typeof EstatisticasRoute
   '/faq': typeof FaqRouteWithChildren
+  '/melhorias': typeof MelhoriasRoute
   '/usuarios': typeof UsuariosRoute
   '/faq/chat': typeof FaqChatRoute
   '/faq/stats': typeof FaqStatsRoute
@@ -102,6 +109,7 @@ export interface FileRoutesByTo {
   '/chat-suporte': typeof ChatSuporteRoute
   '/chats': typeof ChatsRoute
   '/estatisticas': typeof EstatisticasRoute
+  '/melhorias': typeof MelhoriasRoute
   '/usuarios': typeof UsuariosRoute
   '/faq/chat': typeof FaqChatRoute
   '/faq/stats': typeof FaqStatsRoute
@@ -117,6 +125,7 @@ export interface FileRoutesById {
   '/chats': typeof ChatsRoute
   '/estatisticas': typeof EstatisticasRoute
   '/faq': typeof FaqRouteWithChildren
+  '/melhorias': typeof MelhoriasRoute
   '/usuarios': typeof UsuariosRoute
   '/faq/chat': typeof FaqChatRoute
   '/faq/stats': typeof FaqStatsRoute
@@ -133,6 +142,7 @@ export interface FileRouteTypes {
     | '/chats'
     | '/estatisticas'
     | '/faq'
+    | '/melhorias'
     | '/usuarios'
     | '/faq/chat'
     | '/faq/stats'
@@ -146,6 +156,7 @@ export interface FileRouteTypes {
     | '/chat-suporte'
     | '/chats'
     | '/estatisticas'
+    | '/melhorias'
     | '/usuarios'
     | '/faq/chat'
     | '/faq/stats'
@@ -160,6 +171,7 @@ export interface FileRouteTypes {
     | '/chats'
     | '/estatisticas'
     | '/faq'
+    | '/melhorias'
     | '/usuarios'
     | '/faq/chat'
     | '/faq/stats'
@@ -175,6 +187,7 @@ export interface RootRouteChildren {
   ChatsRoute: typeof ChatsRoute
   EstatisticasRoute: typeof EstatisticasRoute
   FaqRoute: typeof FaqRouteWithChildren
+  MelhoriasRoute: typeof MelhoriasRoute
   UsuariosRoute: typeof UsuariosRoute
 }
 
@@ -185,6 +198,13 @@ declare module '@tanstack/react-router' {
       path: '/usuarios'
       fullPath: '/usuarios'
       preLoaderRoute: typeof UsuariosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/melhorias': {
+      id: '/melhorias'
+      path: '/melhorias'
+      fullPath: '/melhorias'
+      preLoaderRoute: typeof MelhoriasRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/faq': {
@@ -293,6 +313,7 @@ const rootRouteChildren: RootRouteChildren = {
   ChatsRoute: ChatsRoute,
   EstatisticasRoute: EstatisticasRoute,
   FaqRoute: FaqRouteWithChildren,
+  MelhoriasRoute: MelhoriasRoute,
   UsuariosRoute: UsuariosRoute,
 }
 export const routeTree = rootRouteImport
