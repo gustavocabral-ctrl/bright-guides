@@ -7,7 +7,10 @@ import {
   Search,
   KanbanSquare,
   Menu,
+  MessageSquare,
+  FileText,
 } from "lucide-react";
+import { useChatSuporte } from "./chat-suporte/ChatSuporteContext";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
