@@ -159,7 +159,6 @@ export function FaqTopbar() {
           </Button>
           {navLinks}
         </div>
-        {tabsGroup}
       </div>
 
       {/* Mobile / tablet */}
