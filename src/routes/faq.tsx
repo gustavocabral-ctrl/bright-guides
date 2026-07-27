@@ -6,6 +6,11 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { FaqTopbar } from "@/components/faq/FaqTopbar";
 import { GlobalHeader } from "@/components/layout/GlobalHeader";
 import { findNode } from "@/lib/faq-tree";
+import {
+  ChatSuporteProvider,
+  useChatSuporte,
+} from "@/components/faq/chat-suporte/ChatSuporteContext";
+import { ChatSuportePanel } from "@/components/faq/chat-suporte/ChatSuportePanel";
 
 export const Route = createFileRoute("/faq")({
   head: () => ({
