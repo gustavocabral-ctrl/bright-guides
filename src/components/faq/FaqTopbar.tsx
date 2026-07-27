@@ -1,15 +1,10 @@
 import { useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
-  BarChart3,
   Calendar as CalendarIcon,
   ChevronDown,
   ChevronUp,
-  MessageSquare,
-  MessagesSquare,
   Search,
-  FileText,
-  Users,
   KanbanSquare,
   Menu,
 } from "lucide-react";
@@ -81,92 +76,22 @@ export function FaqTopbar() {
   );
 
   const navLinks = (
-    <>
-      <Link
-        to="/faq/admin/improvements"
-        onClick={() => setMobileOpen(false)}
-        className={cn(
-          "inline-flex h-9 items-center gap-1 rounded-lg border border-border px-2.5 text-xs font-medium transition-colors",
-          isImprovements
-            ? "bg-primary text-primary-foreground"
-            : "bg-[var(--surface)] text-foreground hover:bg-muted",
-        )}
-      >
-        <KanbanSquare className="h-3.5 w-3.5" />
-        Melhorias
-      </Link>
-      <Link
-        to="/faq/admin/users"
-        onClick={() => setMobileOpen(false)}
-        className={cn(
-          "inline-flex h-9 items-center gap-1 rounded-lg border border-border px-2.5 text-xs font-medium transition-colors",
-          isUsers
-            ? "bg-primary text-primary-foreground"
-            : "bg-[var(--surface)] text-foreground hover:bg-muted",
-        )}
-      >
-        <Users className="h-3.5 w-3.5" />
-        Usuários
-      </Link>
-    </>
+    <Link
+      to="/faq/admin/improvements"
+      onClick={() => setMobileOpen(false)}
+      className={cn(
+        "inline-flex h-9 items-center gap-1 rounded-lg border border-border px-2.5 text-xs font-medium transition-colors",
+        isImprovements
+          ? "bg-primary text-primary-foreground"
+          : "bg-[var(--surface)] text-foreground hover:bg-muted",
+      )}
+    >
+      <KanbanSquare className="h-3.5 w-3.5" />
+      Melhorias
+    </Link>
   );
 
-  const tabsGroup = (
-    <div className="inline-flex flex-wrap rounded-lg border border-border bg-muted/50 p-0.5">
-      <Link
-        to="/faq/stats"
-        onClick={() => setMobileOpen(false)}
-        className={cn(
-          "inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-colors",
-          isStats
-            ? "bg-primary text-primary-foreground shadow-sm"
-            : "text-muted-foreground hover:text-foreground",
-        )}
-      >
-        <BarChart3 className="h-3.5 w-3.5" />
-        Estatísticas
-      </Link>
-      <Link
-        to="/faq/admin/chats"
-        onClick={() => setMobileOpen(false)}
-        className={cn(
-          "inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-colors",
-          isAdminChats
-            ? "bg-primary text-primary-foreground shadow-sm"
-            : "text-muted-foreground hover:text-foreground",
-        )}
-      >
-        <MessagesSquare className="h-3.5 w-3.5" />
-        Chats
-      </Link>
-      <Link
-        to="/faq/chat"
-        onClick={() => setMobileOpen(false)}
-        className={cn(
-          "inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-colors",
-          isChat
-            ? "bg-primary text-primary-foreground shadow-sm"
-            : "text-muted-foreground hover:text-foreground",
-        )}
-      >
-        <MessageSquare className="h-3.5 w-3.5" />
-        Chat FAQ
-      </Link>
-      <Link
-        to="/faq"
-        onClick={() => setMobileOpen(false)}
-        className={cn(
-          "inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-colors",
-          isDoc
-            ? "bg-primary text-primary-foreground shadow-sm"
-            : "text-muted-foreground hover:text-foreground",
-        )}
-      >
-        <FileText className="h-3.5 w-3.5" />
-        Documento
-      </Link>
-    </div>
-  );
+  const tabsGroup = null;
 
   const searchBox = (
     <div className="relative w-full sm:w-72">
@@ -234,7 +159,6 @@ export function FaqTopbar() {
           </Button>
           {navLinks}
         </div>
-        {tabsGroup}
       </div>
 
       {/* Mobile / tablet */}
@@ -262,12 +186,6 @@ export function FaqTopbar() {
             )}
 
             <div className="space-y-3 p-4">
-              <div>
-                <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                  Navegação
-                </p>
-                {tabsGroup}
-              </div>
               <div>
                 <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
                   Administração

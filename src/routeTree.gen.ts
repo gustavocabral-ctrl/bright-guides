@@ -9,7 +9,11 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as UsuariosRouteImport } from './routes/usuarios'
 import { Route as FaqRouteImport } from './routes/faq'
+import { Route as EstatisticasRouteImport } from './routes/estatisticas'
+import { Route as ChatsRouteImport } from './routes/chats'
+import { Route as ChatSuporteRouteImport } from './routes/chat-suporte'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as FaqIndexRouteImport } from './routes/faq.index'
 import { Route as FaqStatsRouteImport } from './routes/faq.stats'
@@ -18,9 +22,29 @@ import { Route as FaqAdminUsersRouteImport } from './routes/faq.admin.users'
 import { Route as FaqAdminImprovementsRouteImport } from './routes/faq.admin.improvements'
 import { Route as FaqAdminChatsRouteImport } from './routes/faq.admin.chats'
 
+const UsuariosRoute = UsuariosRouteImport.update({
+  id: '/usuarios',
+  path: '/usuarios',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FaqRoute = FaqRouteImport.update({
   id: '/faq',
   path: '/faq',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EstatisticasRoute = EstatisticasRouteImport.update({
+  id: '/estatisticas',
+  path: '/estatisticas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChatsRoute = ChatsRouteImport.update({
+  id: '/chats',
+  path: '/chats',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChatSuporteRoute = ChatSuporteRouteImport.update({
+  id: '/chat-suporte',
+  path: '/chat-suporte',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -61,7 +85,11 @@ const FaqAdminChatsRoute = FaqAdminChatsRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/chat-suporte': typeof ChatSuporteRoute
+  '/chats': typeof ChatsRoute
+  '/estatisticas': typeof EstatisticasRoute
   '/faq': typeof FaqRouteWithChildren
+  '/usuarios': typeof UsuariosRoute
   '/faq/chat': typeof FaqChatRoute
   '/faq/stats': typeof FaqStatsRoute
   '/faq/': typeof FaqIndexRoute
@@ -71,6 +99,10 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/chat-suporte': typeof ChatSuporteRoute
+  '/chats': typeof ChatsRoute
+  '/estatisticas': typeof EstatisticasRoute
+  '/usuarios': typeof UsuariosRoute
   '/faq/chat': typeof FaqChatRoute
   '/faq/stats': typeof FaqStatsRoute
   '/faq': typeof FaqIndexRoute
@@ -81,7 +113,11 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/chat-suporte': typeof ChatSuporteRoute
+  '/chats': typeof ChatsRoute
+  '/estatisticas': typeof EstatisticasRoute
   '/faq': typeof FaqRouteWithChildren
+  '/usuarios': typeof UsuariosRoute
   '/faq/chat': typeof FaqChatRoute
   '/faq/stats': typeof FaqStatsRoute
   '/faq/': typeof FaqIndexRoute
@@ -93,7 +129,11 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/chat-suporte'
+    | '/chats'
+    | '/estatisticas'
     | '/faq'
+    | '/usuarios'
     | '/faq/chat'
     | '/faq/stats'
     | '/faq/'
@@ -103,6 +143,10 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/chat-suporte'
+    | '/chats'
+    | '/estatisticas'
+    | '/usuarios'
     | '/faq/chat'
     | '/faq/stats'
     | '/faq'
@@ -112,7 +156,11 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/chat-suporte'
+    | '/chats'
+    | '/estatisticas'
     | '/faq'
+    | '/usuarios'
     | '/faq/chat'
     | '/faq/stats'
     | '/faq/'
@@ -123,16 +171,48 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ChatSuporteRoute: typeof ChatSuporteRoute
+  ChatsRoute: typeof ChatsRoute
+  EstatisticasRoute: typeof EstatisticasRoute
   FaqRoute: typeof FaqRouteWithChildren
+  UsuariosRoute: typeof UsuariosRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/usuarios': {
+      id: '/usuarios'
+      path: '/usuarios'
+      fullPath: '/usuarios'
+      preLoaderRoute: typeof UsuariosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/faq': {
       id: '/faq'
       path: '/faq'
       fullPath: '/faq'
       preLoaderRoute: typeof FaqRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/estatisticas': {
+      id: '/estatisticas'
+      path: '/estatisticas'
+      fullPath: '/estatisticas'
+      preLoaderRoute: typeof EstatisticasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/chats': {
+      id: '/chats'
+      path: '/chats'
+      fullPath: '/chats'
+      preLoaderRoute: typeof ChatsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/chat-suporte': {
+      id: '/chat-suporte'
+      path: '/chat-suporte'
+      fullPath: '/chat-suporte'
+      preLoaderRoute: typeof ChatSuporteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -209,7 +289,11 @@ const FaqRouteWithChildren = FaqRoute._addFileChildren(FaqRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ChatSuporteRoute: ChatSuporteRoute,
+  ChatsRoute: ChatsRoute,
+  EstatisticasRoute: EstatisticasRoute,
   FaqRoute: FaqRouteWithChildren,
+  UsuariosRoute: UsuariosRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
