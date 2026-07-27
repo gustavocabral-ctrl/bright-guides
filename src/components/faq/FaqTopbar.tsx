@@ -41,6 +41,7 @@ export function FaqTopbar() {
     dateFiltro,
     setDateFiltro,
   } = useFaq();
+  const { open: chatOpen, setOpen: setChatOpen } = useChatSuporte();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isChat = pathname.endsWith("/chat");
   const isStats = pathname.endsWith("/stats");
