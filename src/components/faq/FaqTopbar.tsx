@@ -1,15 +1,10 @@
 import { useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
-  BarChart3,
   Calendar as CalendarIcon,
   ChevronDown,
   ChevronUp,
-  MessageSquare,
-  MessagesSquare,
   Search,
-  FileText,
-  Users,
   KanbanSquare,
   Menu,
 } from "lucide-react";
