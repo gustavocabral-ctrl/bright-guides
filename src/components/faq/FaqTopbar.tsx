@@ -1,11 +1,10 @@
 import { useState } from "react";
-import { Link, useRouterState } from "@tanstack/react-router";
+import { useRouterState } from "@tanstack/react-router";
 import {
   Calendar as CalendarIcon,
   ChevronDown,
   ChevronUp,
   Search,
-  KanbanSquare,
   Menu,
   MessageSquare,
   FileText,
@@ -77,22 +76,6 @@ export function FaqTopbar() {
         <SelectItem value="custom">Personalizado</SelectItem>
       </SelectContent>
     </Select>
-  );
-
-  const navLinks = (
-    <Link
-      to="/faq/admin/improvements"
-      onClick={() => setMobileOpen(false)}
-      className={cn(
-        "inline-flex h-9 items-center gap-1 rounded-lg border border-border px-2.5 text-xs font-medium transition-colors",
-        isImprovements
-          ? "bg-primary text-primary-foreground"
-          : "bg-[var(--surface)] text-foreground hover:bg-muted",
-      )}
-    >
-      <KanbanSquare className="h-3.5 w-3.5" />
-      Melhorias
-    </Link>
   );
 
   const tabsGroup = null;
@@ -194,7 +177,6 @@ export function FaqTopbar() {
           <Button size="sm" className="h-9 rounded-lg px-3 text-xs font-medium">
             Filtrar
           </Button>
-          {navLinks}
         </div>
         {viewToggle}
       </div>
@@ -224,12 +206,6 @@ export function FaqTopbar() {
             )}
 
             <div className="space-y-3 p-4">
-              <div>
-                <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                  Administração
-                </p>
-                <div className="flex flex-wrap gap-2">{navLinks}</div>
-              </div>
               <div>
                 <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
                   Filtro por data
