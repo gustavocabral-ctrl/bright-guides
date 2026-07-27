@@ -177,7 +177,6 @@ export function FaqTopbar() {
           <Button size="sm" className="h-9 rounded-lg px-3 text-xs font-medium">
             Filtrar
           </Button>
-          {navLinks}
         </div>
         {viewToggle}
       </div>
