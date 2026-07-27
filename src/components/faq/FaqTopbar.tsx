@@ -78,22 +78,6 @@ export function FaqTopbar() {
     </Select>
   );
 
-  const navLinks = (
-    <Link
-      to="/faq/admin/improvements"
-      onClick={() => setMobileOpen(false)}
-      className={cn(
-        "inline-flex h-9 items-center gap-1 rounded-lg border border-border px-2.5 text-xs font-medium transition-colors",
-        isImprovements
-          ? "bg-primary text-primary-foreground"
-          : "bg-[var(--surface)] text-foreground hover:bg-muted",
-      )}
-    >
-      <KanbanSquare className="h-3.5 w-3.5" />
-      Melhorias
-    </Link>
-  );
-
   const tabsGroup = null;
 
   const searchBox = (
