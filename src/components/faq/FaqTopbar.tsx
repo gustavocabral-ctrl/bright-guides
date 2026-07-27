@@ -1,11 +1,10 @@
 import { useState } from "react";
-import { Link, useRouterState } from "@tanstack/react-router";
+import { useRouterState } from "@tanstack/react-router";
 import {
   Calendar as CalendarIcon,
   ChevronDown,
   ChevronUp,
   Search,
-  KanbanSquare,
   Menu,
   MessageSquare,
   FileText,
