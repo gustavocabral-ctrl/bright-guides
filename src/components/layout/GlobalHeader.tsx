@@ -4,11 +4,11 @@ import {
   BarChart3,
   BookOpen,
   Lightbulb,
-  MessageSquare,
   MessagesSquare,
   Users,
   Menu,
   User,
+  LogOut,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -32,13 +32,7 @@ const NAV_ITEMS: NavItem[] = [
     to: "/faq",
     label: "Editor FAQ",
     icon: BookOpen,
-    matches: (p) => p === "/faq" || p === "/faq/",
-  },
-  {
-    to: "/chat-suporte",
-    label: "Chat Suporte",
-    icon: MessageSquare,
-    matches: (p) => p.startsWith("/chat-suporte") || p.startsWith("/faq/chat"),
+    matches: (p) => p === "/faq" || p === "/faq/" || p.startsWith("/faq"),
   },
   {
     to: "/chats",
