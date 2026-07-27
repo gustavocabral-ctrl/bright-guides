@@ -3,6 +3,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import {
   BarChart3,
   BookOpen,
+  Lightbulb,
   MessageSquare,
   MessagesSquare,
   Users,
@@ -31,7 +32,7 @@ const NAV_ITEMS: NavItem[] = [
     to: "/faq",
     label: "Editor FAQ",
     icon: BookOpen,
-    matches: (p) => p === "/faq" || p === "/faq/" || p.startsWith("/faq/admin/improvements"),
+    matches: (p) => p === "/faq" || p === "/faq/",
   },
   {
     to: "/chat-suporte",
@@ -50,6 +51,12 @@ const NAV_ITEMS: NavItem[] = [
     label: "Estatísticas",
     icon: BarChart3,
     matches: (p) => p.startsWith("/estatisticas") || p.startsWith("/faq/stats"),
+  },
+  {
+    to: "/melhorias",
+    label: "Melhorias",
+    icon: Lightbulb,
+    matches: (p) => p.startsWith("/melhorias") || p.startsWith("/faq/admin/improvements"),
   },
   {
     to: "/usuarios",
