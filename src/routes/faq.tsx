@@ -6,6 +6,11 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { FaqTopbar } from "@/components/faq/FaqTopbar";
 import { GlobalHeader } from "@/components/layout/GlobalHeader";
 import { findNode } from "@/lib/faq-tree";
+import {
+  ChatSuporteProvider,
+  useChatSuporte,
+} from "@/components/faq/chat-suporte/ChatSuporteContext";
+import { ChatSuportePanel } from "@/components/faq/chat-suporte/ChatSuportePanel";
 
 export const Route = createFileRoute("/faq")({
   head: () => ({
@@ -44,21 +49,32 @@ function FaqLayout() {
   const showSidebar = pathname === "/faq" || pathname === "/faq/";
   return (
     <FaqProvider>
-      <DeepLinkSync />
-      <TooltipProvider delayDuration={200}>
-        <div className="flex h-screen w-full flex-col bg-[var(--surface)] text-foreground">
-          <GlobalHeader />
-          <div className="flex flex-1 overflow-hidden">
-            {showSidebar && <FaqSidebar />}
-            <div className="flex flex-1 flex-col overflow-hidden">
-              <FaqTopbar />
-              <main className="flex-1 overflow-auto">
-                <Outlet />
-              </main>
+      <ChatSuporteProvider>
+        <DeepLinkSync />
+        <TooltipProvider delayDuration={200}>
+          <div className="flex h-screen w-full flex-col bg-[var(--surface)] text-foreground">
+            <GlobalHeader />
+            <div className="flex flex-1 overflow-hidden">
+              {showSidebar && <FaqSidebar />}
+              <div className="flex flex-1 flex-col overflow-hidden">
+                <FaqTopbar />
+                <div className="flex flex-1 overflow-hidden">
+                  <main className="flex-1 overflow-auto">
+                    <Outlet />
+                  </main>
+                  <ChatSuporteSlot />
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </TooltipProvider>
+        </TooltipProvider>
+      </ChatSuporteProvider>
     </FaqProvider>
   );
+}
+
+function ChatSuporteSlot() {
+  const { open } = useChatSuporte();
+  if (!open) return null;
+  return <ChatSuportePanel />;
 }

@@ -4,11 +4,11 @@ import {
   BarChart3,
   BookOpen,
   Lightbulb,
-  MessageSquare,
   MessagesSquare,
   Users,
   Menu,
   User,
+  LogOut,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -32,13 +32,7 @@ const NAV_ITEMS: NavItem[] = [
     to: "/faq",
     label: "Editor FAQ",
     icon: BookOpen,
-    matches: (p) => p === "/faq" || p === "/faq/",
-  },
-  {
-    to: "/chat-suporte",
-    label: "Chat Suporte",
-    icon: MessageSquare,
-    matches: (p) => p.startsWith("/chat-suporte") || p.startsWith("/faq/chat"),
+    matches: (p) => p === "/faq" || p === "/faq/" || p.startsWith("/faq"),
   },
   {
     to: "/chats",
@@ -123,6 +117,15 @@ export function GlobalHeader() {
               <User className="h-3.5 w-3.5" />
             </span>
             <span className="hidden lg:inline">Minha conta</span>
+          </button>
+          <button
+            type="button"
+            className="hidden items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground md:inline-flex"
+            aria-label="Sair"
+            title="Sair"
+          >
+            <LogOut className="h-3.5 w-3.5" />
+            <span className="hidden lg:inline">Sair</span>
           </button>
 
           {/* Mobile menu */}
