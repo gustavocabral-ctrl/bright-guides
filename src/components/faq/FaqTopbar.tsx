@@ -245,6 +245,7 @@ export function FaqTopbar() {
 
         <div className="min-w-0 flex-1">{searchBox}</div>
         {searchNav}
+        {viewToggle}
       </div>
     </header>
   );
