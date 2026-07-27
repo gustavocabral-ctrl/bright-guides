@@ -194,12 +194,6 @@ export function FaqTopbar() {
               </div>
               <div>
                 <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                  Administração
-                </p>
-                <div className="flex flex-wrap gap-2">{navLinks}</div>
-              </div>
-              <div>
-                <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
                   Filtro por data
                 </p>
                 {dateSelect}
