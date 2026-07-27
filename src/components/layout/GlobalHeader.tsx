@@ -118,6 +118,15 @@ export function GlobalHeader() {
             </span>
             <span className="hidden lg:inline">Minha conta</span>
           </button>
+          <button
+            type="button"
+            className="hidden items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground md:inline-flex"
+            aria-label="Sair"
+            title="Sair"
+          >
+            <LogOut className="h-3.5 w-3.5" />
+            <span className="hidden lg:inline">Sair</span>
+          </button>
 
           {/* Mobile menu */}
           <Sheet open={open} onOpenChange={setOpen}>
